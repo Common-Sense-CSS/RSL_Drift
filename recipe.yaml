@@ -13,8 +13,11 @@ tasks:
   - action: write_file
     file: ./server.cfg
     data: |
-      endpoint_add_tcp "{{serverEndpoints}}"
-      endpoint_add_udp "{{serverEndpoints}}"
+      # Panels like AMP auto-inject endpoint_add_tcp/endpoint_add_udp for the
+      # interface/port they assign your instance. If deploying to bare
+      # FXServer without such a panel, add these two lines back:
+      #   endpoint_add_tcp "{{serverEndpoints}}"
+      #   endpoint_add_udp "{{serverEndpoints}}"
 
       sv_maxclients {{maxClients}}
       sv_hostname "{{serverName}}"
