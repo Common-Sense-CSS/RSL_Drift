@@ -1,0 +1,69 @@
+$onesync: on
+name: RSL Drift
+version: 1.0.0
+author: RSL
+description: Deploys the RSL Drift server - a custom framework (rsl_core + rsl_drift) for drift gameplay, plus ox_lib/oxmysql.
+
+tasks:
+  - action: connect_database
+
+  ## server.cfg - written from scratch, then templated with deployer context vars.
+  ## {{svLicense}} is substituted automatically by txAdmin at the end of deployment;
+  ## everything else is filled in by the replace_string step below.
+  - action: write_file
+    file: ./server.cfg
+    data: |
+      endpoint_add_tcp "{{serverEndpoints}}"
+      endpoint_add_udp "{{serverEndpoints}}"
+
+      sv_maxclients {{maxClients}}
+      sv_hostname "{{serverName}}"
+      sv_projectName "RSL Drift"
+      sv_projectDesc "A custom drift server built on the RSL framework"
+
+      sv_licenseKey "{{svLicense}}"
+
+      set mysql_connection_string "{{dbConnectionString}}"
+
+      ensure oxmysql
+      ensure ox_lib
+
+      ensure rsl_core
+      ensure rsl_drift
+
+      sv_enforceGameBuild 2944
+
+  - action: replace_string
+    mode: all_vars
+    file:
+      - ./server.cfg
+
+  ## oxmysql (official release)
+  - action: download_file
+    url: https://github.com/overextended/oxmysql/releases/latest/download/oxmysql.zip
+    path: ./tmp/oxmysql.zip
+  - action: unzip
+    src: ./tmp/oxmysql.zip
+    dest: ./resources/[ox]
+
+  ## ox_lib (official release)
+  - action: download_file
+    url: https://github.com/overextended/ox_lib/releases/latest/download/ox_lib.zip
+    path: ./tmp/ox_lib.zip
+  - action: unzip
+    src: ./tmp/ox_lib.zip
+    dest: ./resources/[ox]
+
+  ## RSL framework - rsl_core + rsl_drift
+  - action: download_github
+    src: https://github.com/Common-Sense-CSS/RSL_Drift
+    ref: main
+    subpath: resources/[rsl]
+    dest: ./resources/[rsl]
+
+  - action: query_database
+    file: ./resources/[rsl]/rsl_core/sql/schema.sql
+
+  ## cleanup
+  - action: remove_path
+    path: ./tmp

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>RSL Core</title>
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/notify.css" />
+    <link rel="stylesheet" href="css/hud.css" />
+</head>
+<body>
+    <div id="rsl-notify-container"></div>
+
+    <div id="rsl-hud" class="rsl-panel">
+        <div class="rsl-hud__ring">
+            <div class="rsl-hud__speed" id="rsl-hud-speed">0</div>
+        </div>
+        <div class="rsl-hud__meta">
+            <div class="rsl-hud__gear" id="rsl-hud-gear">N</div>
+            <div class="rsl-hud__label" id="rsl-hud-unit">MPH</div>
+        </div>
+    </div>
+
+    <script src="js/nui-core.js"></script>
+    <script src="js/modules/notify.js"></script>
+    <script src="js/modules/hud.js"></script>
+</body>
+</html>

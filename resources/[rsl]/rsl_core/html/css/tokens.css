@@ -1,0 +1,110 @@
+/*
+ * RSL design tokens — shared purple-accented theme.
+ * Every rsl_core / rsl_drift NUI screen imports this file so the whole
+ * server looks like one consistent system.
+ */
+
+:root {
+    /* Purple accent ramp */
+    --rsl-accent-100: #efe4ff;
+    --rsl-accent-300: #c7a3ff;
+    --rsl-accent-400: #a970ff;
+    --rsl-accent-500: #8b3dff;
+    --rsl-accent-600: #7220e6;
+    --rsl-accent-700: #5716b3;
+    --rsl-accent-glow: rgba(139, 61, 255, 0.55);
+
+    /* Surfaces */
+    --rsl-bg-0: #07050d;
+    --rsl-bg-1: rgba(15, 10, 26, 0.86);
+    --rsl-bg-2: rgba(24, 16, 41, 0.92);
+    --rsl-border: rgba(168, 112, 255, 0.28);
+    --rsl-border-strong: rgba(168, 112, 255, 0.55);
+
+    /* Text */
+    --rsl-text-0: #f5f2ff;
+    --rsl-text-1: #c9bfe0;
+    --rsl-text-2: #8d80ab;
+
+    /* Status */
+    --rsl-success: #35e08a;
+    --rsl-error: #ff4d6d;
+    --rsl-warning: #ffb545;
+    --rsl-info: var(--rsl-accent-400);
+
+    /* Effects */
+    --rsl-radius-sm: 6px;
+    --rsl-radius-md: 12px;
+    --rsl-radius-lg: 20px;
+    --rsl-blur: blur(18px);
+    --rsl-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    --rsl-shadow-glow: 0 0 24px var(--rsl-accent-glow);
+
+    --rsl-font: 'Rajdhani', 'Segoe UI', sans-serif;
+    --rsl-font-display: 'Orbitron', 'Rajdhani', 'Segoe UI', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--rsl-font);
+    color: var(--rsl-text-0);
+}
+
+.rsl-panel {
+    background: var(--rsl-bg-1);
+    border: 1px solid var(--rsl-border);
+    border-radius: var(--rsl-radius-lg);
+    box-shadow: var(--rsl-shadow);
+    backdrop-filter: var(--rsl-blur);
+    -webkit-backdrop-filter: var(--rsl-blur);
+}
+
+.rsl-accent-text {
+    color: var(--rsl-accent-400);
+}
+
+.rsl-btn {
+    font-family: var(--rsl-font);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rsl-text-0);
+    background: linear-gradient(135deg, var(--rsl-accent-600), var(--rsl-accent-500));
+    border: 1px solid var(--rsl-border-strong);
+    border-radius: var(--rsl-radius-sm);
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+.rsl-btn:hover {
+    filter: brightness(1.15);
+}
+
+.rsl-btn:active {
+    transform: scale(0.97);
+}
+
+.rsl-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--rsl-border);
+    color: var(--rsl-text-1);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--rsl-accent-600);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
