@@ -21,12 +21,15 @@ tasks:
 
       sv_maxclients {{maxClients}}
       sv_hostname "{{serverName}}"
-      sv_projectName "RSL Drift"
-      sv_projectDesc "A custom drift server built on the RSL framework"
+      sets sv_projectName "RSL Drift"
+      sets sv_projectDesc "A custom drift server built on the RSL framework"
 
       sv_licenseKey "{{svLicense}}"
 
       set mysql_connection_string "{{dbConnectionString}}"
+
+      # Reject client-side modifications to replicated state bags (recommended by ox_lib)
+      setr sv_stateBagStrictMode true
 
       ensure oxmysql
       ensure ox_lib
