@@ -3,6 +3,8 @@
 -- exports['rsl_core']:RegisterGameState(id, def) rather than editing this file.
 
 GameState = {
+    MAIN_MENU     = 'main_menu',
+    AVATAR        = 'avatar',
     FREEROAM      = 'freeroam',
     GARAGE        = 'garage',
     DEALERSHIP    = 'dealership',

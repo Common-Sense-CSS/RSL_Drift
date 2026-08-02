@@ -13,8 +13,8 @@ RegisterNetEvent('rsl_dealership:purchase', function(model, dealershipId)
     end
     if not dealership then return end
 
-    local identifier = GetPlayerIdentifierByType(src --[[@as string]], 'license')
-    if not identifier or not exports['rsl_core']:HasPlayerLoaded(src) then return end
+    local characterId = exports['rsl_core']:GetActiveCharacterId(src)
+    if not characterId then return end
 
     local ok = exports['rsl_core']:RemovePlayerCash(src, vehicle.price)
     if not ok then
@@ -22,6 +22,6 @@ RegisterNetEvent('rsl_dealership:purchase', function(model, dealershipId)
         return
     end
 
-    exports['rsl_core']:AddVehicleToGarage(identifier, model, dealership.defaultGarageId)
+    exports['rsl_core']:AddVehicleToGarage(characterId, model, dealership.defaultGarageId)
     TriggerClientEvent('rsl_dealership:purchaseResult', src, true, ('Purchased %s! Check the garage.'):format(vehicle.label))
 end)

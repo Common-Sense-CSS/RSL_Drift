@@ -10,8 +10,16 @@ through the exports below — never through direct database access.
 local cash = exports['rsl_core']:GetPlayerCash(source)
 ```
 
-This file covers **Phase 1-2** exports (framework skeleton, garage/dealership,
-admin commands). Drift scoring/leaderboard exports land as later phases ship.
+This file covers **Phase 1-2 + the character system** (framework skeleton,
+garage/dealership, admin commands, multi-character accounts). Inventory and
+the status/needs HUD land next; drift scoring/leaderboard exports land as
+later phases ship.
+
+**Accounts vs. characters:** a license identifier can hold up to
+`RSLConfig.CHARACTER_SLOTS` (3) characters. Nothing is "the active player"
+until one is selected or created via the character-select/creator flow — all
+economy/progression/data exports below operate on whichever character is
+currently active for `source`, and return empty/failure values before that.
 
 ---
 
@@ -26,7 +34,10 @@ admin commands). Drift scoring/leaderboard exports land as later phases ship.
 | `GetGameState()` | | `string?` | Current client-side state id. |
 
 Built-in state ids live in the global `GameState` table (`modules/core/game_state_sh.lua`):
-`FREEROAM`, `GARAGE`, `DEALERSHIP`, `TUNING_SHOP`, `DRIFT_EVENT`, `DRIFT_LOBBY`, `DRIFT_BATTLE`.
+`MAIN_MENU`, `AVATAR`, `FREEROAM`, `GARAGE`, `DEALERSHIP`, `TUNING_SHOP`, `DRIFT_EVENT`, `DRIFT_LOBBY`, `DRIFT_BATTLE`.
+Every session starts in `MAIN_MENU` (character select) — `rsl_core` owns the
+`MAIN_MENU`/`AVATAR` states itself (character_select_c.lua/character_creator_c.lua);
+add-ons shouldn't re-register them.
 
 ```lua
 exports['rsl_core']:RegisterGameState('my_addon_state', {
@@ -64,7 +75,7 @@ exports['rsl_core']:ShowNotification({ title = 'Run saved!', type = 'success' })
 
 | Export | Params | Returns | Description |
 |--------|--------|---------|-------------|
-| `HasPlayerLoaded(source)` | server id | `boolean` | Whether the player's profile finished loading. Guard other exports behind this. |
+| `HasPlayerLoaded(source)` | server id | `boolean` | Whether the player has an **active character** (selected or just created) — not just connected. Guard other exports behind this. |
 | `GetPlayerCash(source)` | server id | `number` | Current cash balance (0 if not loaded). |
 | `AddPlayerCash(source, amount)` | server id, amount | `boolean` | Add cash. `false` if not loaded or invalid amount. |
 | `RemovePlayerCash(source, amount)` | server id, amount | `boolean` | Remove cash. `false` if not loaded, invalid amount, or insufficient funds. |
@@ -109,14 +120,28 @@ local zone = exports['rsl_core']:ReadPlayerData(source, 'myAddon.favoriteZone')
 
 ### Garage / Vehicles
 
-Vehicle rows live in `rsl_vehicles` (see `sql/schema.sql`), each owned by a player identifier. `mods`/`tuning` JSON columns exist for later phases and are currently always `{}`.
+Vehicle rows live in `rsl_vehicles` (see `sql/schema.sql`), each owned by a **character id** (not an account). `mods`/`tuning` JSON columns exist for later phases and are currently always `{}`.
 
 | Export | Params | Returns | Description |
 |--------|--------|---------|-------------|
-| `GetOwnedVehicles(source)` | server id | `table[]` | All vehicles owned by the player: `{ id, model, plate, garage_id, stored, xp, level }`. |
-| `AddVehicleToGarage(identifier, model, garageId)` | license identifier, model name, garage id | `string` vehicle id | Creates a new owned vehicle (stored) with a unique plate. Used by the dealership; add-ons can also grant vehicles directly (e.g. event rewards). |
+| `GetOwnedVehicles(source)` | server id | `table[]` | All vehicles owned by the player's active character: `{ id, model, plate, garage_id, stored, xp, level }`. |
+| `AddVehicleToGarage(characterId, model, garageId)` | character id, model name, garage id | `string` vehicle id | Creates a new owned vehicle (stored) with a unique plate. Used by the dealership; add-ons can also grant vehicles directly (e.g. event rewards) — get the character id via `GetActiveCharacterId(source)`. |
 
 Garage locations are defined in `data/rsl_garages.lua` (`RSLGarages`, shared). Dealership locations and the vehicle catalog are in `data/rsl_dealerships.lua` (`RSLDealerships`) and `data/rsl_vehicles.lua` (`RSLVehicles`), both shared — add-ons can read them directly rather than through an export.
+
+### Characters
+
+| Export | Params | Returns | Description |
+|--------|--------|---------|-------------|
+| `GetCharacterSlots(source)` | server id | `table[]` | The account's `RSLConfig.CHARACTER_SLOTS` slots: `{ slotIndex, occupied, id?, name?, model?, level? }`. |
+| `SelectCharacter(source, characterId)` | server id, character id | `table?` | Activates an owned character, returns its full row (including decoded `appearance`/`data`), or `nil` if not owned. |
+| `CreateCharacter(source, slotIndex, name, model, appearance)` | server id, slot 1-N, name, `'mp_m_freemode_01'`\|`'mp_f_freemode_01'`, appearance table | `table?` | Creates + activates a character in an empty slot. `appearance` is run through `RSLCharacterOptions.SanitizeAppearance` server-side — never trust it as-is. `nil` if the slot is taken or inputs are invalid. |
+| `DeleteCharacter(source, characterId)` | server id, character id | `boolean` | Deletes an owned character. Cascades to their vehicles and (later) drift scores/inventory. |
+| `GetActiveCharacterId(source)` | server id | `string?` | The active character's id, for add-ons that need to key their own tables off it (as `rsl_vehicles` does). |
+
+Shared (`data/rsl_character_options.lua`): `RSLCharacterOptions.DefaultAppearance(model)` and `RSLCharacterOptions.SanitizeAppearance(raw, model)` define and clamp the appearance table shape (head blend, 20 face features, hair, overlays, clothing) — reuse these rather than hand-rolling appearance validation.
+
+Client-side, `RSLAppearance.Apply(ped, model, appearance)` (`modules/character/appearance_c.lua`) applies an appearance table to any ped — self, a preview, or (via `modules/character/appearance_sync_c.lua`'s `rsl:appearance` state bag handler) another player's.
 
 ---
 

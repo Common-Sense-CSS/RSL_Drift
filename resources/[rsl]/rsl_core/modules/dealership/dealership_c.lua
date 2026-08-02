@@ -68,7 +68,8 @@ CreateThread(function()
             end
             if dist < 8.0 then
                 RSLHelpers.DrawText3D(dealership.coords, ('[E] %s'):format(dealership.name))
-                if dist < 2.5 and IsControlJustReleased(0, 38) and not isOpen then
+                if dist < 2.5 and IsControlJustReleased(0, 38) and not isOpen
+                    and exports['rsl_core']:GetGameState() == GameState.FREEROAM then
                     openDealership(dealership)
                 end
             end

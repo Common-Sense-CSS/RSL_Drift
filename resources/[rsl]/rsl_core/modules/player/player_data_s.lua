@@ -1,11 +1,15 @@
 -- RSL player data & economy — server
--- One persistent row per player (license identifier). Loaded before the
--- player is allowed to join, cached in memory while connected, flushed to
--- the database on an interval, on drop, and on explicit PersistPlayer calls.
+-- Accounts (license identifiers) hold up to RSLConfig.CHARACTER_SLOTS
+-- characters in `rsl_characters`. Nothing is "the active player" until a
+-- character is selected/created — see modules/character/character_s.lua for
+-- the net-event layer that drives GetCharacterSlots/SelectCharacter/
+-- CreateCharacter/DeleteCharacter below. Economy/progression/data exports
+-- all operate on whichever character is currently active for `source`.
 
 local dbReady = false
-local players = {} ---@type table<string, table> keyed by identifier: { source, name, cash, xp, level, data, dirty }
-local sourceToIdentifier = {} ---@type table<integer, string>
+local identifiers = {} ---@type table<integer, string> source -> license identifier
+local activeCharacter = {} ---@type table<integer, string> source -> character id
+local characters = {} ---@type table<string, table> character id -> cached row
 
 MySQL.ready(function()
     local schema = LoadResourceFile(GetCurrentResourceName(), 'sql/schema.sql')
@@ -50,59 +54,32 @@ local function mutatePath(t, path, value)
     node[parts[#parts]] = value
 end
 
--- Load / persist --------------------------------------------------------
-
----@param identifier string
----@param name string
+---@param json_ string
 ---@return table
-local function loadOrCreatePlayer(identifier, name)
-    local row = MySQL.single.await('SELECT * FROM rsl_players WHERE identifier = ?', { identifier })
-
-    if not row then
-        MySQL.insert.await(
-            'INSERT INTO rsl_players (identifier, name, cash, xp, level, data) VALUES (?, ?, ?, ?, ?, ?)',
-            { identifier, name, RSLConfig.STARTING_CASH, 0, 1, '{}' }
-        )
-        return {
-            identifier = identifier,
-            name = name,
-            cash = RSLConfig.STARTING_CASH,
-            xp = 0,
-            level = 1,
-            data = {},
-            dirty = false,
-        }
-    end
-
-    local ok, decoded = pcall(json.decode, row.data)
-    return {
-        identifier = identifier,
-        name = row.name,
-        cash = row.cash,
-        xp = row.xp,
-        level = row.level,
-        data = (ok and type(decoded) == 'table') and decoded or {},
-        dirty = false,
-    }
+local function decodeOrEmpty(json_)
+    local ok, decoded = pcall(json.decode, json_)
+    return (ok and type(decoded) == 'table') and decoded or {}
 end
 
----@param identifier string
-local function persistPlayer(identifier)
-    local player = players[identifier]
-    if not player or not player.dirty then return end
+-- Persist ---------------------------------------------------------------
+
+---@param characterId string
+local function persistCharacter(characterId)
+    local char = characters[characterId]
+    if not char or not char.dirty then return end
 
     MySQL.update.await(
-        'UPDATE rsl_players SET name = ?, cash = ?, xp = ?, level = ?, data = ?, last_seen_at = NOW(3) WHERE identifier = ?',
-        { player.name, player.cash, player.xp, player.level, json.encode(player.data), identifier }
+        'UPDATE rsl_characters SET name = ?, cash = ?, xp = ?, level = ?, appearance = ?, data = ?, last_played_at = NOW(3) WHERE id = ?',
+        { char.name, char.cash, char.xp, char.level, json.encode(char.appearance), json.encode(char.data), characterId }
     )
-    player.dirty = false
+    char.dirty = false
 end
 
 CreateThread(function()
     while true do
         Wait(RSLConfig.SAVE_INTERVAL_MS)
-        for identifier in pairs(players) do
-            persistPlayer(identifier)
+        for characterId in pairs(characters) do
+            persistCharacter(characterId)
         end
     end
 end)
@@ -127,7 +104,7 @@ AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
         end
     end
 
-    deferrals.update('Loading your driver profile...')
+    deferrals.update('Verifying your account...')
 
     local identifier = GetPlayerIdentifierByType(src --[[@as string]], 'license')
     if not identifier then
@@ -135,22 +112,19 @@ AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
         return
     end
 
-    local name = GetPlayerName(src) or 'Driver'
-    local player = loadOrCreatePlayer(identifier, name)
-    players[identifier] = player
-    sourceToIdentifier[src] = identifier
-
+    identifiers[src] = identifier
     deferrals.done()
 end)
 
 AddEventHandler('playerDropped', function()
     local src = source --[[@as integer]]
-    local identifier = sourceToIdentifier[src]
-    if not identifier then return end
-
-    persistPlayer(identifier)
-    players[identifier] = nil
-    sourceToIdentifier[src] = nil
+    local characterId = activeCharacter[src]
+    if characterId then
+        persistCharacter(characterId)
+        characters[characterId] = nil
+        activeCharacter[src] = nil
+    end
+    identifiers[src] = nil
 end)
 
 -- Internal helper ---------------------------------------------------------
@@ -158,9 +132,138 @@ end)
 ---@param source integer
 ---@return table?
 local function getPlayer(source)
-    local identifier = sourceToIdentifier[source]
+    local characterId = activeCharacter[source]
+    if not characterId then return nil end
+    return characters[characterId]
+end
+
+-- Character CRUD ------------------------------------------------------------
+
+---@param row table raw DB row
+---@return table cached character
+local function cacheCharacterRow(row)
+    local char = {
+        id = row.id,
+        ownerIdentifier = row.owner_identifier,
+        slotIndex = row.slot_index,
+        name = row.name,
+        model = row.model,
+        appearance = decodeOrEmpty(row.appearance),
+        cash = row.cash,
+        xp = row.xp,
+        level = row.level,
+        data = decodeOrEmpty(row.data),
+        dirty = false,
+    }
+    characters[char.id] = char
+    return char
+end
+
+---@param source integer
+---@return table[] 3 slots: { slotIndex, occupied, id?, name?, model?, level? }
+local function getCharacterSlots(source)
+    local identifier = identifiers[source]
+    if not identifier then return {} end
+
+    local rows = MySQL.query.await(
+        'SELECT id, slot_index, name, model, level, appearance FROM rsl_characters WHERE owner_identifier = ?',
+        { identifier }
+    )
+
+    local slots = {}
+    for i = 1, RSLConfig.CHARACTER_SLOTS do
+        slots[i] = { slotIndex = i, occupied = false }
+    end
+    for _, row in ipairs(rows) do
+        if slots[row.slot_index] then
+            slots[row.slot_index] = {
+                slotIndex = row.slot_index,
+                occupied = true,
+                id = row.id,
+                name = row.name,
+                model = row.model,
+                level = row.level,
+                appearance = decodeOrEmpty(row.appearance),
+            }
+        end
+    end
+    return slots
+end
+
+---@param source integer
+---@param characterId string
+---@return table? character data for the client to apply/spawn with
+local function selectCharacter(source, characterId)
+    local identifier = identifiers[source]
+    if not identifier or type(characterId) ~= 'string' then return nil end
+
+    local row = MySQL.single.await(
+        'SELECT * FROM rsl_characters WHERE id = ? AND owner_identifier = ?',
+        { characterId, identifier }
+    )
+    if not row then return nil end
+
+    local char = cacheCharacterRow(row)
+    activeCharacter[source] = char.id
+    return char
+end
+
+---@param source integer
+---@param slotIndex integer
+---@param name string
+---@param model string
+---@param appearance table
+---@return table? character data for the client to apply/spawn with
+local function createCharacter(source, slotIndex, name, model, appearance)
+    local identifier = identifiers[source]
     if not identifier then return nil end
-    return players[identifier]
+    if type(slotIndex) ~= 'number' or slotIndex < 1 or slotIndex > RSLConfig.CHARACTER_SLOTS then return nil end
+    if type(name) ~= 'string' or #name < 1 or #name > 32 then return nil end
+    if model ~= 'mp_m_freemode_01' and model ~= 'mp_f_freemode_01' then return nil end
+    appearance = RSLCharacterOptions.SanitizeAppearance(appearance, model)
+
+    local existing = MySQL.scalar.await(
+        'SELECT 1 FROM rsl_characters WHERE owner_identifier = ? AND slot_index = ?',
+        { identifier, slotIndex }
+    )
+    if existing then return nil end
+
+    local id = MySQL.scalar.await('SELECT UUID()')
+    MySQL.insert.await(
+        'INSERT INTO rsl_characters (id, owner_identifier, slot_index, name, model, appearance, cash, xp, level, data) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, ?)',
+        { id, identifier, slotIndex, name, model, json.encode(appearance), RSLConfig.STARTING_CASH, '{}' }
+    )
+
+    local char = cacheCharacterRow({
+        id = id, owner_identifier = identifier, slot_index = slotIndex, name = name, model = model,
+        appearance = json.encode(appearance), cash = RSLConfig.STARTING_CASH, xp = 0, level = 1, data = '{}',
+    })
+    activeCharacter[source] = char.id
+    return char
+end
+
+---@param source integer
+---@param characterId string
+---@return boolean
+local function deleteCharacter(source, characterId)
+    local identifier = identifiers[source]
+    if not identifier or type(characterId) ~= 'string' then return false end
+
+    local owned = MySQL.scalar.await('SELECT 1 FROM rsl_characters WHERE id = ? AND owner_identifier = ?', { characterId, identifier })
+    if not owned then return false end
+
+    MySQL.query.await('DELETE FROM rsl_characters WHERE id = ?', { characterId })
+    characters[characterId] = nil
+    if activeCharacter[source] == characterId then
+        activeCharacter[source] = nil
+    end
+    return true
+end
+
+---@param source integer
+---@return string?
+local function getActiveCharacterId(source)
+    return activeCharacter[source]
 end
 
 -- Exports -----------------------------------------------------------------
@@ -290,9 +393,9 @@ end
 ---@param source integer
 ---@return boolean
 local function persistPlayerExport(source)
-    local identifier = sourceToIdentifier[source]
-    if not identifier then return false end
-    persistPlayer(identifier)
+    local characterId = activeCharacter[source]
+    if not characterId then return false end
+    persistCharacter(characterId)
     return true
 end
 
@@ -308,3 +411,9 @@ exports('AwardPlayerXp', awardPlayerXp)
 exports('ReadPlayerData', readPlayerData)
 exports('WritePlayerData', writePlayerData)
 exports('PersistPlayer', persistPlayerExport)
+
+exports('GetCharacterSlots', getCharacterSlots)
+exports('SelectCharacter', selectCharacter)
+exports('CreateCharacter', createCharacter)
+exports('DeleteCharacter', deleteCharacter)
+exports('GetActiveCharacterId', getActiveCharacterId)

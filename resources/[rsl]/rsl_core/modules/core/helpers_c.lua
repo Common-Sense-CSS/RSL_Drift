@@ -41,3 +41,36 @@ end
 function RSLHelpers.DrawLocationMarker(coords)
     DrawMarker(1, coords.x, coords.y, coords.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, 1.0, 139, 61, 255, 140, false, false, 2, false, nil, nil, false)
 end
+
+---@param hash integer
+---@return boolean
+function RSLHelpers.LoadModel(hash)
+    if HasModelLoaded(hash) then return true end
+    RequestModel(hash)
+    local timeout = 0
+    while not HasModelLoaded(hash) and timeout < 5000 do
+        Wait(50)
+        timeout = timeout + 50
+    end
+    return HasModelLoaded(hash)
+end
+
+-- Spawns/warps the local player into the world with the given model at
+-- coords (vector4, w = heading). Bypasses spawnmanager's registered-points
+-- pool (basic-gamemode also registers points there) so it's deterministic.
+-- `cb`, if given, runs once spawnmanager reports the spawn complete (the new
+-- ped handle is only guaranteed stable at that point, not immediately after
+-- this call returns).
+---@param model string
+---@param coords vector4
+---@param cb function?
+function RSLHelpers.SpawnPlayer(model, coords, cb)
+    exports.spawnmanager:setAutoSpawn(false)
+    exports.spawnmanager:spawnPlayer({
+        x = coords.x,
+        y = coords.y,
+        z = coords.z,
+        heading = coords.w,
+        model = model,
+    }, cb)
+end

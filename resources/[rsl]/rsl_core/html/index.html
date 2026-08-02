@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="css/hud.css" />
     <link rel="stylesheet" href="css/garage.css" />
     <link rel="stylesheet" href="css/dealership.css" />
+    <link rel="stylesheet" href="css/character-select.css" />
+    <link rel="stylesheet" href="css/character-creator.css" />
 </head>
 <body>
     <div id="rsl-notify-container"></div>
@@ -42,10 +44,58 @@
         </div>
     </div>
 
+    <div id="rsl-character-select">
+        <div class="rcs-title">RSL DRIFT</div>
+        <div class="rcs-slots" id="rsl-character-select-slots"></div>
+    </div>
+
+    <div id="rsl-character-creator">
+        <div class="rcc-topbar rsl-panel">
+            <button class="rcc-tab active" data-tab="identity">Identity</button>
+            <button class="rcc-tab" data-tab="heritage">Heritage</button>
+            <button class="rcc-tab" data-tab="structure">Structure</button>
+            <button class="rcc-tab" data-tab="hair">Hair</button>
+            <button class="rcc-tab" data-tab="makeup">Makeup</button>
+            <button class="rcc-tab" data-tab="clothing">Clothing</button>
+        </div>
+
+        <div class="rcc-panel rsl-panel active" id="rcc-panel-identity">
+            <div class="rcc-section-title">Name</div>
+            <div class="rcc-field">
+                <input type="text" id="rcc-name" maxlength="32" placeholder="Character name" />
+            </div>
+            <div class="rcc-section-title">Gender</div>
+            <div class="rcc-toggle-row">
+                <button class="rsl-btn rcc-active" id="rcc-gender-male">Male</button>
+                <button class="rsl-btn" id="rcc-gender-female">Female</button>
+            </div>
+        </div>
+
+        <div class="rcc-panel rsl-panel" id="rcc-panel-heritage"></div>
+        <div class="rcc-panel rsl-panel" id="rcc-panel-structure"></div>
+        <div class="rcc-panel rsl-panel" id="rcc-panel-hair"></div>
+        <div class="rcc-panel rsl-panel" id="rcc-panel-makeup"></div>
+        <div class="rcc-panel rsl-panel" id="rcc-panel-clothing"></div>
+
+        <div class="rcc-viewport-controls rsl-panel">
+            <button id="rcc-rotate-left">◀</button>
+            <button id="rcc-framing-face" class="rcc-active">Face</button>
+            <button id="rcc-framing-body">Body</button>
+            <button id="rcc-rotate-right">▶</button>
+        </div>
+
+        <div class="rcc-footer">
+            <button class="rsl-btn rsl-btn--ghost" id="rcc-back">Back</button>
+            <button class="rsl-btn" id="rcc-confirm">Confirm</button>
+        </div>
+    </div>
+
     <script src="js/nui-core.js"></script>
     <script src="js/modules/notify.js"></script>
     <script src="js/modules/hud.js"></script>
     <script src="js/modules/garage.js"></script>
     <script src="js/modules/dealership.js"></script>
+    <script src="js/modules/character-select.js"></script>
+    <script src="js/modules/character-creator.js"></script>
 </body>
 </html>

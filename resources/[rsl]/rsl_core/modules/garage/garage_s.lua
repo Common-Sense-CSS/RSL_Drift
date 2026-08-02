@@ -1,6 +1,7 @@
 -- RSL garage — server
 -- Vehicle ownership storage. Rows live in `rsl_vehicles`; `stored = 1` means
 -- parked in the garage, `stored = 0` means currently out in the world.
+-- Ownership is scoped to the active character, not the account.
 
 local PLATE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
@@ -18,12 +19,6 @@ local function generatePlate()
     error('rsl_garage: failed to generate a unique plate after 20 attempts')
 end
 
----@param source integer
----@return string?
-local function identifierFor(source)
-    return GetPlayerIdentifierByType(source --[[@as string]], 'license')
-end
-
 -- Some MySQL drivers return TINYINT(1) as a boolean instead of 0/1. Normalize
 -- to a plain number so every consumer (server, client, NUI) sees one shape.
 ---@param row table
@@ -33,16 +28,16 @@ local function normalizeStored(row)
     return row
 end
 
----@param identifier string
+---@param characterId string
 ---@param model string
 ---@param garageId string
 ---@return string vehicleId
-local function addVehicleToGarage(identifier, model, garageId)
+local function addVehicleToGarage(characterId, model, garageId)
     local id = MySQL.scalar.await('SELECT UUID()')
     local plate = generatePlate()
     MySQL.insert.await(
-        'INSERT INTO rsl_vehicles (id, owner_identifier, model, plate, garage_id, stored, mods, tuning) VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
-        { id, identifier, model, plate, garageId, '{}', '{}' }
+        'INSERT INTO rsl_vehicles (id, owner_character_id, model, plate, garage_id, stored, mods, tuning) VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
+        { id, characterId, model, plate, garageId, '{}', '{}' }
     )
     return id
 end
@@ -50,11 +45,11 @@ end
 ---@param source integer
 ---@return table
 local function getOwnedVehicles(source)
-    local identifier = identifierFor(source)
-    if not identifier then return {} end
+    local characterId = exports['rsl_core']:GetActiveCharacterId(source)
+    if not characterId then return {} end
     local rows = MySQL.query.await(
-        'SELECT id, model, plate, garage_id, stored, xp, level FROM rsl_vehicles WHERE owner_identifier = ? ORDER BY created_at ASC',
-        { identifier }
+        'SELECT id, model, plate, garage_id, stored, xp, level FROM rsl_vehicles WHERE owner_character_id = ? ORDER BY created_at ASC',
+        { characterId }
     )
     for _, row in ipairs(rows) do normalizeStored(row) end
     return rows
@@ -63,12 +58,12 @@ end
 RegisterNetEvent('rsl_garage:requestList', function(garageId)
     local src = source
     if type(garageId) ~= 'string' then return end
-    local identifier = identifierFor(src)
-    if not identifier or not exports['rsl_core']:HasPlayerLoaded(src) then return end
+    local characterId = exports['rsl_core']:GetActiveCharacterId(src)
+    if not characterId then return end
 
     local vehicles = MySQL.query.await(
-        'SELECT id, model, plate, garage_id, stored FROM rsl_vehicles WHERE owner_identifier = ? AND garage_id = ? ORDER BY created_at ASC',
-        { identifier, garageId }
+        'SELECT id, model, plate, garage_id, stored FROM rsl_vehicles WHERE owner_character_id = ? AND garage_id = ? ORDER BY created_at ASC',
+        { characterId, garageId }
     )
     for _, row in ipairs(vehicles) do normalizeStored(row) end
     TriggerClientEvent('rsl_garage:list', src, vehicles, garageId)
@@ -77,12 +72,12 @@ end)
 RegisterNetEvent('rsl_garage:spawnVehicle', function(vehicleId)
     local src = source
     if type(vehicleId) ~= 'string' then return end
-    local identifier = identifierFor(src)
-    if not identifier then return end
+    local characterId = exports['rsl_core']:GetActiveCharacterId(src)
+    if not characterId then return end
 
     local row = MySQL.single.await(
-        'SELECT id, model, plate, garage_id, stored FROM rsl_vehicles WHERE id = ? AND owner_identifier = ?',
-        { vehicleId, identifier }
+        'SELECT id, model, plate, garage_id, stored FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
+        { vehicleId, characterId }
     )
     if not row then return end
     normalizeStored(row)
@@ -95,12 +90,12 @@ end)
 RegisterNetEvent('rsl_garage:storeVehicle', function(vehicleId, plate)
     local src = source
     if type(vehicleId) ~= 'string' or type(plate) ~= 'string' then return end
-    local identifier = identifierFor(src)
-    if not identifier then return end
+    local characterId = exports['rsl_core']:GetActiveCharacterId(src)
+    if not characterId then return end
 
     local row = MySQL.single.await(
-        'SELECT id, plate, stored FROM rsl_vehicles WHERE id = ? AND owner_identifier = ?',
-        { vehicleId, identifier }
+        'SELECT id, plate, stored FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
+        { vehicleId, characterId }
     )
     if not row then return end
     normalizeStored(row)

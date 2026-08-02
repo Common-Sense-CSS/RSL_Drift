@@ -68,5 +68,5 @@ end
 
 CreateThread(function()
     Wait(0)
-    setGameState(GameState.FREEROAM)
+    setGameState(GameState.MAIN_MENU)
 end)

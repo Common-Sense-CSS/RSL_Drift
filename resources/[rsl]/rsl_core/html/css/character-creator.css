@@ -1,0 +1,184 @@
+#rsl-character-creator {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 45;
+}
+
+#rsl-character-creator.rsl-modal--visible {
+    display: block;
+}
+
+.rcc-topbar {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+}
+
+.rcc-tab {
+    font-family: var(--rsl-font);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--rsl-text-2);
+    background: transparent;
+    border: none;
+    border-radius: var(--rsl-radius-sm);
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.rcc-tab.active {
+    color: var(--rsl-text-0);
+    background: var(--rsl-accent-600);
+}
+
+.rcc-panel {
+    position: fixed;
+    top: 76px;
+    left: 20px;
+    width: 320px;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+    padding: 18px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.rcc-panel.active {
+    display: flex;
+}
+
+.rcc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rcc-field__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rcc-field__label {
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--rsl-text-2);
+}
+
+.rcc-field__value {
+    font-size: 11px;
+    color: var(--rsl-accent-400);
+}
+
+.rcc-field input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(168, 112, 255, 0.18);
+    outline: none;
+}
+
+.rcc-field input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--rsl-accent-400);
+    box-shadow: 0 0 6px var(--rsl-accent-glow);
+    cursor: pointer;
+}
+
+.rcc-field input[type="text"] {
+    background: var(--rsl-bg-2);
+    border: 1px solid var(--rsl-border);
+    border-radius: var(--rsl-radius-sm);
+    color: var(--rsl-text-0);
+    padding: 8px 10px;
+    font-family: var(--rsl-font);
+    font-size: 13px;
+}
+
+.rcc-toggle-row {
+    display: flex;
+    gap: 8px;
+}
+
+.rcc-toggle-row .rsl-btn {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 11px;
+}
+
+.rcc-toggle-row .rsl-btn:not(.rcc-active) {
+    background: transparent;
+    border-color: var(--rsl-border);
+}
+
+.rcc-section-title {
+    font-family: var(--rsl-font-display);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rsl-accent-400);
+    margin-top: 6px;
+}
+
+.rcc-cycle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.rcc-cycle button {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--rsl-radius-sm);
+    background: var(--rsl-bg-2);
+    border: 1px solid var(--rsl-border);
+    color: var(--rsl-text-0);
+    cursor: pointer;
+}
+
+.rcc-viewport-controls {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+}
+
+.rcc-viewport-controls button {
+    background: transparent;
+    border: 1px solid var(--rsl-border);
+    color: var(--rsl-text-1);
+    border-radius: var(--rsl-radius-sm);
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.rcc-viewport-controls button.rcc-active {
+    background: var(--rsl-accent-600);
+    color: var(--rsl-text-0);
+    border-color: var(--rsl-border-strong);
+}
+
+.rcc-footer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}

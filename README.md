@@ -6,12 +6,22 @@ export API.
 
 ## Status
 
-Phase 1 (framework skeleton) and Phase 2 (vehicles & progression) are complete:
+Phase 1 (framework skeleton), Phase 2 (vehicles & progression), and the
+multi-character system are complete:
 
-- `rsl_core` — player identity/economy/XP, game-state machine, notifications,
-  HUD, garage, dealership, and admin commands (see `RSL_API.md`).
+- `rsl_core` — player identity/economy/XP (per-character), game-state
+  machine, notifications, HUD, garage, dealership, admin commands, and a
+  3-slot character system with full appearance customization (see `RSL_API.md`).
 - `rsl_drift` — scaffolded, depends on `rsl_core`, no drift gameplay yet.
 
+**Breaking change:** the database schema changed from account-scoped to
+character-scoped (`rsl_players` → `rsl_characters`, vehicles/scores now key
+off character id). If you have an existing test database, drop `rsl_players`,
+`rsl_vehicles`, and `rsl_drift_scores` before restarting — `schema.sql` does
+this automatically on a fresh apply, but only for tables it manages, so make
+sure you're running the current `schema.sql`, not a cached copy.
+
+An inventory system and a health/hunger/thirst/stamina status HUD are next.
 Drift scoring & zones, tandem detection, leaderboards/ghosts, tuning, and the
 tablet/drift-battle UI land in later phases.
 
