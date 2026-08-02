@@ -36,7 +36,6 @@
     --rsl-radius-sm: 6px;
     --rsl-radius-md: 12px;
     --rsl-radius-lg: 20px;
-    --rsl-blur: blur(18px);
     --rsl-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
     --rsl-shadow-glow: 0 0 24px var(--rsl-accent-glow);
 
@@ -50,18 +49,26 @@
     padding: 0;
 }
 
+html, body {
+    background: transparent;
+}
+
 body {
     font-family: var(--rsl-font);
     color: var(--rsl-text-0);
 }
 
+/*
+ * No backdrop-filter here on purpose: FXServer's NUI browser can only blur
+ * content painted within its own page, not the game world behind it, so
+ * backdrop-filter renders as a solid black box instead of a glass blur.
+ * The panel look comes from the semi-transparent background alone.
+ */
 .rsl-panel {
     background: var(--rsl-bg-1);
     border: 1px solid var(--rsl-border);
     border-radius: var(--rsl-radius-lg);
     box-shadow: var(--rsl-shadow);
-    backdrop-filter: var(--rsl-blur);
-    -webkit-backdrop-filter: var(--rsl-blur);
 }
 
 .rsl-accent-text {

@@ -18,8 +18,6 @@
     background: var(--rsl-bg-1);
     border-radius: var(--rsl-radius-md);
     box-shadow: var(--rsl-shadow);
-    backdrop-filter: var(--rsl-blur);
-    -webkit-backdrop-filter: var(--rsl-blur);
     transform: translateX(120%);
     opacity: 0;
     animation: rsl-toast-in 0.28s ease forwards;
