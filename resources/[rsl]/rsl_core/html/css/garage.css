@@ -1,0 +1,81 @@
+#rsl-garage {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 3, 10, 0.55);
+    z-index: 50;
+}
+
+#rsl-garage.rsl-modal--visible {
+    display: flex;
+}
+
+#rsl-garage .rsl-modal {
+    width: 560px;
+    max-height: 70vh;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#rsl-garage .rsl-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#rsl-garage .rsl-modal__title {
+    font-family: var(--rsl-font-display);
+    font-size: 18px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+#rsl-garage .rsl-modal__list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 4px;
+}
+
+#rsl-garage .rsl-vehicle-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--rsl-bg-2);
+    border: 1px solid var(--rsl-border);
+    border-radius: var(--rsl-radius-md);
+}
+
+#rsl-garage .rsl-vehicle-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#rsl-garage .rsl-vehicle-card__model {
+    font-weight: 600;
+    color: var(--rsl-text-0);
+}
+
+#rsl-garage .rsl-vehicle-card__status {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--rsl-text-2);
+}
+
+#rsl-garage .rsl-vehicle-card__status--out {
+    color: var(--rsl-accent-400);
+}
+
+#rsl-garage .rsl-empty {
+    color: var(--rsl-text-2);
+    text-align: center;
+    padding: 24px 0;
+}

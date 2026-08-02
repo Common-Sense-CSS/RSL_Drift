@@ -1,0 +1,77 @@
+#rsl-dealership {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 3, 10, 0.55);
+    z-index: 50;
+}
+
+#rsl-dealership.rsl-modal--visible {
+    display: flex;
+}
+
+#rsl-dealership .rsl-modal {
+    width: 640px;
+    max-height: 75vh;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#rsl-dealership .rsl-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#rsl-dealership .rsl-modal__title {
+    font-family: var(--rsl-font-display);
+    font-size: 18px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+#rsl-dealership .rsl-modal__grid {
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding-right: 4px;
+}
+
+#rsl-dealership .rsl-catalog-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    background: var(--rsl-bg-2);
+    border: 1px solid var(--rsl-border);
+    border-radius: var(--rsl-radius-md);
+}
+
+#rsl-dealership .rsl-catalog-card__brand {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rsl-text-2);
+}
+
+#rsl-dealership .rsl-catalog-card__label {
+    font-weight: 600;
+    color: var(--rsl-text-0);
+}
+
+#rsl-dealership .rsl-catalog-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+#rsl-dealership .rsl-catalog-card__price {
+    font-family: var(--rsl-font-display);
+    color: var(--rsl-accent-400);
+}

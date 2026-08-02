@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/notify.css" />
     <link rel="stylesheet" href="css/hud.css" />
+    <link rel="stylesheet" href="css/garage.css" />
+    <link rel="stylesheet" href="css/dealership.css" />
 </head>
 <body>
     <div id="rsl-notify-container"></div>
@@ -20,8 +22,30 @@
         </div>
     </div>
 
+    <div id="rsl-garage">
+        <div class="rsl-modal rsl-panel">
+            <div class="rsl-modal__header">
+                <div class="rsl-modal__title">Garage</div>
+                <button class="rsl-btn rsl-btn--ghost" id="rsl-garage-close">Close</button>
+            </div>
+            <div class="rsl-modal__list" id="rsl-garage-list"></div>
+        </div>
+    </div>
+
+    <div id="rsl-dealership">
+        <div class="rsl-modal rsl-panel">
+            <div class="rsl-modal__header">
+                <div class="rsl-modal__title">Dealership</div>
+                <button class="rsl-btn rsl-btn--ghost" id="rsl-dealership-close">Close</button>
+            </div>
+            <div class="rsl-modal__grid" id="rsl-dealership-grid"></div>
+        </div>
+    </div>
+
     <script src="js/nui-core.js"></script>
     <script src="js/modules/notify.js"></script>
     <script src="js/modules/hud.js"></script>
+    <script src="js/modules/garage.js"></script>
+    <script src="js/modules/dealership.js"></script>
 </body>
 </html>

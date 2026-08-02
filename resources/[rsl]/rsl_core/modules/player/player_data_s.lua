@@ -204,10 +204,41 @@ local function removePlayerCash(source, amount)
 end
 
 ---@param source integer
+---@param amount number
+---@return boolean
+local function setPlayerCash(source, amount)
+    local player = getPlayer(source)
+    if not player or type(amount) ~= 'number' or amount < 0 then return false end
+    player.cash = math.floor(amount)
+    player.dirty = true
+    TriggerClientEvent('rsl_core:cashUpdated', source, player.cash)
+    return true
+end
+
+---@param source integer
 ---@return integer
 local function getPlayerLevel(source)
     local player = getPlayer(source)
     return player and player.level or 1
+end
+
+---@param source integer
+---@param level integer
+---@return boolean
+local function setPlayerLevel(source, level)
+    local player = getPlayer(source)
+    if not player or type(level) ~= 'number' then return false end
+    level = math.floor(level)
+    if level < 1 or level > RSLProgressionConfig.PLAYER_MAX_LEVEL then return false end
+
+    player.level = level
+    player.xp = 0
+    for l = 1, level - 1 do
+        player.xp = player.xp + RSLProgression.XpForLevel(l)
+    end
+    player.dirty = true
+    TriggerClientEvent('rsl_core:xpUpdated', source, player.xp, player.level, { xpGained = 0, oldLevel = level, newLevel = level, levelUps = 0 })
+    return true
 end
 
 ---@param source integer
@@ -269,7 +300,9 @@ exports('HasPlayerLoaded', hasPlayerLoaded)
 exports('GetPlayerCash', getPlayerCash)
 exports('AddPlayerCash', addPlayerCash)
 exports('RemovePlayerCash', removePlayerCash)
+exports('SetPlayerCash', setPlayerCash)
 exports('GetPlayerLevel', getPlayerLevel)
+exports('SetPlayerLevel', setPlayerLevel)
 exports('GetPlayerXp', getPlayerXp)
 exports('AwardPlayerXp', awardPlayerXp)
 exports('ReadPlayerData', readPlayerData)

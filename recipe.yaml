@@ -50,6 +50,12 @@ tasks:
 
       sv_enforceGameBuild 2944
 
+      # Admin permissions for RSL's admin commands (givecash, setlevel, car,
+      # tp, deletevehicle). Replace CHANGEME with your FiveM license
+      # identifier (F8 console -> "license:xxxxxxxx" after connecting once).
+      # add_principal identifier.license:CHANGEME group.admin
+      # add_ace group.admin command allow
+
   - action: replace_string
     mode: all_vars
     file:

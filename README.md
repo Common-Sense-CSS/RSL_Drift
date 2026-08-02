@@ -6,13 +6,14 @@ export API.
 
 ## Status
 
-Phase 1 (framework skeleton) is complete:
+Phase 1 (framework skeleton) and Phase 2 (vehicles & progression) are complete:
 
-- `rsl_core` — player identity/economy/XP, game-state machine, notifications, HUD.
+- `rsl_core` — player identity/economy/XP, game-state machine, notifications,
+  HUD, garage, dealership, and admin commands (see `RSL_API.md`).
 - `rsl_drift` — scaffolded, depends on `rsl_core`, no drift gameplay yet.
 
-Garage/dealership, drift scoring & zones, tandem detection, leaderboards/ghosts,
-tuning, and the tablet/drift-battle UI land in later phases.
+Drift scoring & zones, tandem detection, leaderboards/ghosts, tuning, and the
+tablet/drift-battle UI land in later phases.
 
 ## Setup
 
@@ -21,22 +22,31 @@ tuning, and the tablet/drift-battle UI land in later phases.
    and place it in this folder (or point your run script at this folder as
    the server root — `+set citizen_dir "..."`, `+exec server.cfg`).
 
-2. **Third-party dependencies** — this project intentionally depends on two
+2. **Base CFX system resources** — `mapmanager`, `chat`, `spawnmanager`,
+   `sessionmanager`, `basic-gamemode`, `hardcap`, `rconlog`. These are **not**
+   bundled in the FXServer artifact. Download
+   [`citizenfx/cfx-server-data`](https://github.com/citizenfx/cfx-server-data)
+   and copy its `resources/` folder into `resources/[cfx]/` here. Without
+   these, clients hang indefinitely on "awaiting scripts".
+
+3. **Third-party dependencies** — this project intentionally depends on two
    community utility libraries (not frameworks): download the latest releases
    and drop them into `resources/`:
    - [`ox_lib`](https://github.com/overextended/ox_lib)
    - [`oxmysql`](https://github.com/overextended/oxmysql)
 
-3. **Database** — create a MySQL/MariaDB database (e.g. `rsl_drift`). Tables
+4. **Database** — create a MySQL/MariaDB database (e.g. `rsl_drift`). Tables
    are created automatically on first start by `rsl_core`
    (`resources/[rsl]/rsl_core/sql/schema.sql`), so you don't need to import
    anything manually — just make sure the database itself exists.
 
-4. **Configure `server.cfg`**:
+5. **Configure `server.cfg`**:
    - Set `sv_licenseKey` (get one at https://keymaster.fivem.net/).
    - Set the `mysql_connection_string` convar to your database credentials.
+   - Uncomment and fill in the `add_principal`/`add_ace` lines at the bottom
+     to grant yourself admin commands (see `RSL_API.md`).
 
-5. **Start the server** (e.g. `FXServer.exe +exec server.cfg` on Windows).
+6. **Start the server** (e.g. `FXServer.exe +exec server.cfg` on Windows).
 
 ## Deploying via txAdmin recipe
 
