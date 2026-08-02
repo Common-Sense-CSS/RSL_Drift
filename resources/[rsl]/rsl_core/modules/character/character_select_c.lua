@@ -50,10 +50,12 @@ local function exitPreviewPose()
 end
 
 local function requestSlots()
+    exports['rsl_core']:ShowNotification({ title = 'DEBUG: requesting character slots...', type = 'info' })
     TriggerServerEvent('rsl_character:requestSlots')
 end
 
 RegisterNetEvent('rsl_character:slots', function(newSlots)
+    exports['rsl_core']:ShowNotification({ title = ('DEBUG: got %d slots from server'):format(#newSlots), type = 'success' })
     slots = newSlots
     SendNUIMessage({ action = 'characterSelect:show', slots = slots })
 end)

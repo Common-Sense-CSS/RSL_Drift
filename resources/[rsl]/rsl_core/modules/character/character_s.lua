@@ -5,7 +5,13 @@
 
 RegisterNetEvent('rsl_character:requestSlots', function()
     local src = source
-    local slots = exports['rsl_core']:GetCharacterSlots(src)
+    print(('^3[rsl_character]^7 requestSlots from #%d'):format(src))
+    local ok, slots = pcall(function() return exports['rsl_core']:GetCharacterSlots(src) end)
+    if not ok then
+        print(('^1[rsl_character]^7 GetCharacterSlots errored: %s'):format(tostring(slots)))
+        return
+    end
+    print(('^3[rsl_character]^7 sending %d slots to #%d'):format(#slots, src))
     TriggerClientEvent('rsl_character:slots', src, slots)
 end)
 
