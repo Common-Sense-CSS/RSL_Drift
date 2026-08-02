@@ -86,22 +86,30 @@ RegisterNUICallback('garage:store', function(data, cb)
 end)
 
 CreateThread(function()
+    for _, garage in ipairs(RSLGarages) do
+        RSLHelpers.CreateBlip(garage.coords, 357, 3, garage.name)
+    end
+end)
+
+CreateThread(function()
     while true do
         local playerCoords = GetEntityCoords(PlayerPedId())
-        local near = nil
+        local drawing = false
 
         for _, garage in ipairs(RSLGarages) do
             local dist = #(playerCoords - garage.coords)
+            if dist < 30.0 then
+                drawing = true
+                RSLHelpers.DrawLocationMarker(garage.coords)
+            end
             if dist < 8.0 then
-                near = garage
                 RSLHelpers.DrawText3D(garage.coords, ('[E] %s'):format(garage.name))
                 if dist < 2.5 and IsControlJustReleased(0, 38) and not isOpen then
                     TriggerServerEvent('rsl_garage:requestList', garage.id)
                 end
-                break
             end
         end
 
-        Wait(near and 0 or 400)
+        Wait(drawing and 0 or 400)
     end
 end)

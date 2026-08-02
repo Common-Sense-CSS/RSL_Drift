@@ -50,22 +50,30 @@ RegisterNUICallback('dealership:buy', function(data, cb)
 end)
 
 CreateThread(function()
+    for _, dealership in ipairs(RSLDealerships) do
+        RSLHelpers.CreateBlip(dealership.coords, 225, 5, dealership.name)
+    end
+end)
+
+CreateThread(function()
     while true do
         local playerCoords = GetEntityCoords(PlayerPedId())
-        local near = nil
+        local drawing = false
 
         for _, dealership in ipairs(RSLDealerships) do
             local dist = #(playerCoords - dealership.coords)
+            if dist < 30.0 then
+                drawing = true
+                RSLHelpers.DrawLocationMarker(dealership.coords)
+            end
             if dist < 8.0 then
-                near = dealership
                 RSLHelpers.DrawText3D(dealership.coords, ('[E] %s'):format(dealership.name))
                 if dist < 2.5 and IsControlJustReleased(0, 38) and not isOpen then
                     openDealership(dealership)
                 end
-                break
             end
         end
 
-        Wait(near and 0 or 400)
+        Wait(drawing and 0 or 400)
     end
 end)
