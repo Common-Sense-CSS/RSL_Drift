@@ -31,9 +31,9 @@ tasks:
       # Reject client-side modifications to replicated state bags (recommended by ox_lib)
       setr sv_stateBagStrictMode true
 
-      # Base FiveM system resources — handle the connect/session/spawn handshake.
-      # Bundled inside every FXServer artifact, no download needed. Without these
-      # clients can hang indefinitely on "awaiting scripts".
+      # Base FiveM system resources (fetched from cfx-server-data below) —
+      # handle the connect/session/spawn handshake. Without these clients can
+      # hang indefinitely on "awaiting scripts".
       ensure mapmanager
       ensure chat
       ensure spawnmanager
@@ -54,6 +54,15 @@ tasks:
     mode: all_vars
     file:
       - ./server.cfg
+
+  ## Default CFX system resources (mapmanager, chat, spawnmanager,
+  ## sessionmanager, basic-gamemode, hardcap, rconlog, etc.) — required for
+  ## the base connect/session/spawn handshake, not bundled in the artifact.
+  - action: download_github
+    src: https://github.com/citizenfx/cfx-server-data
+    ref: master
+    subpath: resources
+    dest: ./resources/[cfx]
 
   ## oxmysql (official release)
   - action: download_file
