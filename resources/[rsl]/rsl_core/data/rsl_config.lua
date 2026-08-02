@@ -7,9 +7,12 @@ RSLConfig = {
     SPEED_UNIT            = 'mph',          -- 'mph' or 'kmh'
     DEFAULT_SPAWN         = vector4(-211.234, -1015.918, 24.35, 40.0),
     CHARACTER_SLOTS       = 3,
-    -- Character select/creation preview spot. Reuses DEFAULT_SPAWN's
-    -- confirmed on-ground coordinates rather than an unverified new location.
-    CHARACTER_PREVIEW     = vector4(-211.234, -1018.918, 24.35, 220.0),
+    -- Character select/creation preview spot. Identical x/y/z to
+    -- DEFAULT_SPAWN (the only coordinate actually confirmed clear of nearby
+    -- geometry by real testing) — only heading differs. A previous version
+    -- of this used a nearby-but-unverified offset and the preview camera
+    -- clipped into something there.
+    CHARACTER_PREVIEW     = vector4(-211.234, -1015.918, 24.35, 220.0),
 }
 
 RSLProgressionConfig = {
