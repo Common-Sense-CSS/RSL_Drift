@@ -31,6 +31,17 @@ tasks:
       # Reject client-side modifications to replicated state bags (recommended by ox_lib)
       setr sv_stateBagStrictMode true
 
+      # Base FiveM system resources — handle the connect/session/spawn handshake.
+      # Bundled inside every FXServer artifact, no download needed. Without these
+      # clients can hang indefinitely on "awaiting scripts".
+      ensure mapmanager
+      ensure chat
+      ensure spawnmanager
+      ensure sessionmanager
+      ensure basic-gamemode
+      ensure hardcap
+      ensure rconlog
+
       ensure oxmysql
       ensure ox_lib
 

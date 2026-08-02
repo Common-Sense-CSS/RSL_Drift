@@ -6,6 +6,7 @@ description 'RSL Core — custom framework for the RSL Drift server'
 version '0.1.0'
 
 dependencies {
+    'spawnmanager',
     'oxmysql',
     'ox_lib',
 }
@@ -17,6 +18,7 @@ shared_scripts {
 }
 
 client_scripts {
+    'modules/core/spawn_c.lua',
     'modules/core/game_state_c.lua',
     'modules/notify/notify_c.lua',
     'modules/hud/hud_c.lua',
