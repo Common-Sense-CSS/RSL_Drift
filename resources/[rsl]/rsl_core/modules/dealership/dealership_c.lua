@@ -35,6 +35,11 @@ end
 
 RegisterNetEvent('rsl_dealership:purchaseResult', function(ok, message)
     exports['rsl_core']:ShowNotification({ title = message, type = ok and 'success' or 'error' })
+    SendNUIMessage({ action = 'dealership:purchaseResult', ok = ok })
+end)
+
+RegisterNetEvent('rsl_dealership:garages', function(list)
+    SendNUIMessage({ action = 'dealership:garages', garages = list })
 end)
 
 RegisterNUICallback('dealership:close', function(_, cb)
@@ -42,9 +47,14 @@ RegisterNUICallback('dealership:close', function(_, cb)
     cb('ok')
 end)
 
+RegisterNUICallback('dealership:requestGarages', function(_, cb)
+    TriggerServerEvent('rsl_dealership:requestGarages')
+    cb('ok')
+end)
+
 RegisterNUICallback('dealership:buy', function(data, cb)
     if currentDealershipId then
-        TriggerServerEvent('rsl_dealership:purchase', data.model, currentDealershipId)
+        TriggerServerEvent('rsl_dealership:purchase', data.model, currentDealershipId, data.mode, data.garageId)
     end
     cb('ok')
 end)

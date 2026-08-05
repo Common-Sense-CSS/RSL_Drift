@@ -120,14 +120,23 @@ local zone = exports['rsl_core']:ReadPlayerData(source, 'myAddon.favoriteZone')
 
 ### Garage / Vehicles
 
-Vehicle rows live in `rsl_vehicles` (see `sql/schema.sql`), each owned by a **character id** (not an account). `mods`/`tuning` JSON columns exist for later phases and are currently always `{}`.
+Vehicle rows live in `rsl_vehicles` (see `sql/schema.sql`), each owned by a **character id** (not an account). `mods`/`tuning` JSON columns exist for later phases and are currently always `{}`. A vehicle's `garage_id` is assigned once, at creation, and never changes — taking it out and storing it again just toggles `stored` within that same garage.
+
+Each garage holds at most `RSLConfig.GARAGE_MAX_VEHICLES` (15) vehicles **per character** — counted across both stored and currently-out vehicles, since `garage_id` is permanent. Only one vehicle can be "out" per character at a time: requesting a different one auto-stores whichever vehicle is currently out, back at its own garage (this is what `SpawnOwnedVehicle` below handles).
+
+Garage names are personal nicknames — each character can optionally rename any garage for themselves (stored in their own `data` JSON via `WritePlayerData`, path `garageNames.<garageId>`); other characters/players still see the default name from `RSLGarages` unless they've set their own.
 
 | Export | Params | Returns | Description |
 |--------|--------|---------|-------------|
 | `GetOwnedVehicles(source)` | server id | `table[]` | All vehicles owned by the player's active character: `{ id, model, plate, garage_id, stored, xp, level }`. |
-| `AddVehicleToGarage(characterId, model, garageId)` | character id, model name, garage id | `string` vehicle id | Creates a new owned vehicle (stored) with a unique plate. Used by the dealership; add-ons can also grant vehicles directly (e.g. event rewards) — get the character id via `GetActiveCharacterId(source)`. |
+| `AddVehicleToGarage(characterId, model, garageId)` | character id, model name, garage id | `string` vehicle id | Creates a new owned vehicle (stored) with a unique plate. Used by the dealership; add-ons can also grant vehicles directly (e.g. event rewards) — get the character id via `GetActiveCharacterId(source)`. Does **not** check garage capacity itself — callers that let a player pick the garage (like the dealership) should check `GetGarageVehicleCount` first. |
+| `SpawnOwnedVehicle(source, characterId, vehicleId, coordsOverride?)` | server id, character id, vehicle id, `vector4?` | | Spawns an owned vehicle for the player — at `coordsOverride` if given, else its garage's `spawnCoords`. Auto-stores any other vehicle the character currently has out first. Used by the garage take-out flow and the dealership's "drive now" purchase. |
+| `GetGarageVehicleCount(characterId, garageId)` | character id, garage id | `integer` | Total vehicles (stored or out) that character has assigned to that garage — compare against `RSLConfig.GARAGE_MAX_VEHICLES` before adding another. |
+| `GetGarageName(source, garageId)` | server id, garage id | `string` | The garage's effective name for that player — their personal nickname if they've set one, else the default from `RSLGarages`. |
 
-Garage locations are defined in `data/rsl_garages.lua` (`RSLGarages`, shared). Dealership locations and the vehicle catalog are in `data/rsl_dealerships.lua` (`RSLDealerships`) and `data/rsl_vehicles.lua` (`RSLVehicles`), both shared — add-ons can read them directly rather than through an export.
+Garage locations are defined in `data/rsl_garages.lua` (`RSLGarages`, shared) — each entry is `{ id, name, coords, spawnCoords }`. Dealership locations and the vehicle catalog are in `data/rsl_dealerships.lua` (`RSLDealerships`, each `{ id, name, coords, spawnCoords, defaultGarageId }`) and `data/rsl_vehicles.lua` (`RSLVehicles`, each entry has a `category` used for the dealership's filter tabs), both shared — add-ons can read them directly rather than through an export.
+
+At the dealership, purchases carry a `mode`: `'drive'` spawns the car immediately at the dealership's `spawnCoords`; `'garage'` sends it (stored) to a player-chosen garage, rejected before any cash is taken if that garage is already at capacity.
 
 ### Characters
 

@@ -1,9 +1,19 @@
 -- RSL garage — server
 -- Vehicle ownership storage. Rows live in `rsl_vehicles`; `stored = 1` means
 -- parked in the garage, `stored = 0` means currently out in the world.
--- Ownership is scoped to the active character, not the account.
+-- Ownership is scoped to the active character, not the account. A vehicle's
+-- `garage_id` is assigned once (on purchase) and never changes — capacity is
+-- therefore only checked at creation time (see dealership_s.lua), not when
+-- toggling `stored`.
 
 local PLATE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+
+-- Last known network id for each vehicle a client has spawned, so a later
+-- swap (see spawnVehicleForCharacter) can find and delete it even if it's no
+-- longer near the requesting player. Ephemeral/best-effort: a stale or
+-- missing entry just means nothing visually deletes — the `stored` DB flag
+-- is still the source of truth.
+local outVehicleNetId = {} ---@type table<string, integer>
 
 local function generatePlate()
     for _ = 1, 20 do
@@ -26,6 +36,35 @@ end
 local function normalizeStored(row)
     row.stored = (row.stored == true or row.stored == 1) and 1 or 0
     return row
+end
+
+---@param garageId string
+---@return table?
+local function findGarage(garageId)
+    for _, g in ipairs(RSLGarages) do
+        if g.id == garageId then return g end
+    end
+    return nil
+end
+
+---@param source integer
+---@param garageId string
+---@return string
+local function getEffectiveGarageName(source, garageId)
+    local custom = exports['rsl_core']:ReadPlayerData(source, 'garageNames.' .. garageId)
+    if type(custom) == 'string' and #custom > 0 then return custom end
+    local garage = findGarage(garageId)
+    return garage and garage.name or garageId
+end
+
+---@param characterId string
+---@param garageId string
+---@return integer
+local function getGarageVehicleCount(characterId, garageId)
+    return MySQL.scalar.await(
+        'SELECT COUNT(*) FROM rsl_vehicles WHERE owner_character_id = ? AND garage_id = ?',
+        { characterId, garageId }
+    ) or 0
 end
 
 ---@param characterId string
@@ -55,6 +94,41 @@ local function getOwnedVehicles(source)
     return rows
 end
 
+-- Spawns `vehicleId` for `src` at its garage's spawnCoords (or
+-- `coordsOverride`, used by the dealership's drive-now purchase). Any other
+-- vehicle this character currently has out is auto-returned to its own
+-- garage first — only one vehicle can be out at a time, which is what fixes
+-- the "taking out a second car spawns it into the first" bug.
+---@param src integer
+---@param characterId string
+---@param vehicleId string
+---@param coordsOverride vector4?
+local function spawnVehicleForCharacter(src, characterId, vehicleId, coordsOverride)
+    local row = MySQL.single.await(
+        'SELECT id, model, plate, garage_id, `stored` FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
+        { vehicleId, characterId }
+    )
+    if not row then return end
+    normalizeStored(row)
+
+    local others = MySQL.query.await(
+        'SELECT id FROM rsl_vehicles WHERE owner_character_id = ? AND `stored` = 0 AND id != ?',
+        { characterId, vehicleId }
+    )
+    local previous = {}
+    for _, other in ipairs(others) do
+        MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 1 WHERE id = ?', { other.id })
+        previous[#previous + 1] = { id = other.id, netId = outVehicleNetId[other.id] }
+        outVehicleNetId[other.id] = nil
+    end
+
+    if row.stored == 1 then
+        MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 0 WHERE id = ?', { vehicleId })
+    end
+
+    TriggerClientEvent('rsl_garage:doSpawn', src, row, previous, coordsOverride)
+end
+
 RegisterNetEvent('rsl_garage:requestList', function(garageId)
     local src = source
     if type(garageId) ~= 'string' then return end
@@ -66,7 +140,34 @@ RegisterNetEvent('rsl_garage:requestList', function(garageId)
         { characterId, garageId }
     )
     for _, row in ipairs(vehicles) do normalizeStored(row) end
-    TriggerClientEvent('rsl_garage:list', src, vehicles, garageId)
+
+    TriggerClientEvent('rsl_garage:list', src, vehicles, garageId, {
+        name = getEffectiveGarageName(src, garageId),
+        count = #vehicles,
+        max = RSLConfig.GARAGE_MAX_VEHICLES,
+    })
+end)
+
+RegisterNetEvent('rsl_garage:requestNames', function()
+    local src = source
+    if not exports['rsl_core']:GetActiveCharacterId(src) then return end
+
+    local names = {}
+    for _, g in ipairs(RSLGarages) do
+        names[g.id] = getEffectiveGarageName(src, g.id)
+    end
+    TriggerClientEvent('rsl_garage:names', src, names)
+end)
+
+RegisterNetEvent('rsl_garage:rename', function(garageId, name)
+    local src = source
+    if type(garageId) ~= 'string' or type(name) ~= 'string' then return end
+    if not findGarage(garageId) then return end
+    if not exports['rsl_core']:GetActiveCharacterId(src) then return end
+
+    name = name:gsub('^%s+', ''):gsub('%s+$', ''):sub(1, 32)
+    exports['rsl_core']:WritePlayerData(src, 'garageNames.' .. garageId, name)
+    TriggerClientEvent('rsl_garage:renamed', src, garageId, getEffectiveGarageName(src, garageId))
 end)
 
 RegisterNetEvent('rsl_garage:spawnVehicle', function(vehicleId)
@@ -76,15 +177,21 @@ RegisterNetEvent('rsl_garage:spawnVehicle', function(vehicleId)
     if not characterId then return end
 
     local row = MySQL.single.await(
-        'SELECT id, model, plate, garage_id, `stored` FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
+        'SELECT `stored` FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
         { vehicleId, characterId }
     )
     if not row then return end
     normalizeStored(row)
     if row.stored == 0 then return end
 
-    MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 0 WHERE id = ?', { vehicleId })
-    TriggerClientEvent('rsl_garage:doSpawn', src, row)
+    spawnVehicleForCharacter(src, characterId, vehicleId)
+end)
+
+RegisterNetEvent('rsl_garage:reportSpawned', function(vehicleId, netId)
+    local src = source
+    if type(vehicleId) ~= 'string' or type(netId) ~= 'number' then return end
+    if not exports['rsl_core']:GetActiveCharacterId(src) then return end
+    outVehicleNetId[vehicleId] = netId
 end)
 
 RegisterNetEvent('rsl_garage:storeVehicle', function(vehicleId, plate)
@@ -102,8 +209,12 @@ RegisterNetEvent('rsl_garage:storeVehicle', function(vehicleId, plate)
     if row.stored == 1 or row.plate ~= plate then return end
 
     MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 1 WHERE id = ?', { vehicleId })
+    outVehicleNetId[vehicleId] = nil
     TriggerClientEvent('rsl_garage:stored', src, vehicleId)
 end)
 
 exports('GetOwnedVehicles', getOwnedVehicles)
 exports('AddVehicleToGarage', addVehicleToGarage)
+exports('SpawnOwnedVehicle', spawnVehicleForCharacter)
+exports('GetGarageVehicleCount', getGarageVehicleCount)
+exports('GetGarageName', getEffectiveGarageName)

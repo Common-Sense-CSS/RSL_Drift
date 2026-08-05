@@ -1,6 +1,15 @@
 (function () {
     const root = document.getElementById('rsl-garage');
     const list = document.getElementById('rsl-garage-list');
+    const titleEl = document.getElementById('rsl-garage-title');
+    const countEl = document.getElementById('rsl-garage-count');
+    const renameBtn = document.getElementById('rsl-garage-rename-btn');
+    const renameRow = document.getElementById('rsl-garage-rename-row');
+    const renameInput = document.getElementById('rsl-garage-rename-input');
+    const renameSave = document.getElementById('rsl-garage-rename-save');
+    const renameCancel = document.getElementById('rsl-garage-rename-cancel');
+
+    let currentGarageId = null;
 
     function render(vehicles) {
         list.innerHTML = '';
@@ -28,14 +37,45 @@
         }
     }
 
+    function closeRename() {
+        renameRow.hidden = true;
+    }
+
     RSL.on('garage:show', (data) => {
         root.classList.add('rsl-modal--visible');
+        currentGarageId = data.garageId;
+        closeRename();
         render(data.vehicles);
+        if (data.meta) {
+            titleEl.textContent = data.meta.name;
+            countEl.textContent = `${data.meta.count}/${data.meta.max}`;
+            renameInput.value = data.meta.name;
+        }
     });
 
     RSL.on('garage:hide', () => {
         root.classList.remove('rsl-modal--visible');
+        closeRename();
     });
+
+    RSL.on('garage:renamed', (data) => {
+        if (data.garageId !== currentGarageId) return;
+        titleEl.textContent = data.name;
+        renameInput.value = data.name;
+        closeRename();
+    });
+
+    renameBtn.addEventListener('click', () => {
+        renameRow.hidden = !renameRow.hidden;
+        if (!renameRow.hidden) renameInput.focus();
+    });
+
+    renameSave.addEventListener('click', () => {
+        if (!currentGarageId) return;
+        RSL.post('garage:rename', { garageId: currentGarageId, name: renameInput.value });
+    });
+
+    renameCancel.addEventListener('click', closeRename);
 
     document.getElementById('rsl-garage-close').addEventListener('click', () => RSL.post('garage:close'));
 

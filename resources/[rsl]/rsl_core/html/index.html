@@ -27,20 +27,44 @@
     <div id="rsl-garage">
         <div class="rsl-modal rsl-panel">
             <div class="rsl-modal__header">
-                <div class="rsl-modal__title">Garage</div>
+                <div class="rsl-modal__title-group">
+                    <div class="rsl-modal__title" id="rsl-garage-title">Garage</div>
+                    <button class="rsl-icon-btn" id="rsl-garage-rename-btn" title="Rename garage">&#9998;</button>
+                    <div class="rsl-garage__count" id="rsl-garage-count">0/15</div>
+                </div>
                 <button class="rsl-btn rsl-btn--ghost" id="rsl-garage-close">Close</button>
+            </div>
+            <div class="rsl-garage__rename-row" id="rsl-garage-rename-row" hidden>
+                <input type="text" id="rsl-garage-rename-input" maxlength="32" placeholder="Garage nickname (optional)" />
+                <button class="rsl-btn" id="rsl-garage-rename-save">Save</button>
+                <button class="rsl-btn rsl-btn--ghost" id="rsl-garage-rename-cancel">Cancel</button>
             </div>
             <div class="rsl-modal__list" id="rsl-garage-list"></div>
         </div>
     </div>
 
     <div id="rsl-dealership">
-        <div class="rsl-modal rsl-panel">
+        <div class="rsl-modal rsl-modal--wide rsl-panel">
             <div class="rsl-modal__header">
                 <div class="rsl-modal__title">Dealership</div>
                 <button class="rsl-btn rsl-btn--ghost" id="rsl-dealership-close">Close</button>
             </div>
+            <div class="rsl-dealership__tabs" id="rsl-dealership-tabs"></div>
             <div class="rsl-modal__grid" id="rsl-dealership-grid"></div>
+        </div>
+    </div>
+
+    <div id="rsl-dealership-buy">
+        <div class="rsl-modal rsl-panel">
+            <div class="rsl-modal__header">
+                <div class="rsl-modal__title" id="rsl-dealership-buy-title">Purchase</div>
+                <button class="rsl-btn rsl-btn--ghost" id="rsl-dealership-buy-close">Cancel</button>
+            </div>
+            <div class="rsl-dealership__choice" id="rsl-dealership-buy-choice">
+                <button class="rsl-btn rsl-btn--wide" id="rsl-dealership-buy-drive">Drive Now</button>
+                <button class="rsl-btn rsl-btn--wide" id="rsl-dealership-buy-garage">Send to Garage</button>
+            </div>
+            <div class="rsl-modal__list" id="rsl-dealership-buy-garages" hidden></div>
         </div>
     </div>
 
