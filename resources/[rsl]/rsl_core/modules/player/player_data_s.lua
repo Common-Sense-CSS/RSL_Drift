@@ -7,7 +7,6 @@
 -- all operate on whichever character is currently active for `source`.
 
 local dbReady = false
-local identifiers = {} ---@type table<integer, string> source -> license identifier
 local activeCharacter = {} ---@type table<integer, string> source -> character id
 local characters = {} ---@type table<string, table> character id -> cached row
 
@@ -88,7 +87,6 @@ end)
 
 AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
     local src = source
-    print(('^3[rsl_playerConnecting]^7 fired for #%d, dbReady=%s'):format(src, tostring(dbReady)))
     deferrals.defer()
     Wait(0)
 
@@ -100,7 +98,6 @@ AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
             waited = waited + 250
         end
         if not dbReady then
-            print(('^1[rsl_playerConnecting]^7 #%d rejected: database never became ready'):format(src))
             deferrals.done('Database is not ready. Please try reconnecting shortly.')
             return
         end
@@ -108,16 +105,15 @@ AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
 
     deferrals.update('Verifying your account...')
 
+    -- Only a liveness/eligibility check here: `src` during playerConnecting is a
+    -- temporary connecting-phase handle, not the server id the player ends up
+    -- with, so it can't be cached and reused once they're actually in.
     local identifier = GetPlayerIdentifierByType(src --[[@as string]], 'license')
-    print(('^3[rsl_playerConnecting]^7 #%d GetPlayerIdentifierByType(license) = %s'):format(src, tostring(identifier)))
     if not identifier then
-        print(('^1[rsl_playerConnecting]^7 #%d rejected: no license identifier'):format(src))
         deferrals.done('Could not verify your license identifier.')
         return
     end
 
-    identifiers[src] = identifier
-    print(('^2[rsl_playerConnecting]^7 #%d identifier stored, calling deferrals.done()'):format(src))
     deferrals.done()
 end)
 
@@ -129,10 +125,15 @@ AddEventHandler('playerDropped', function()
         characters[characterId] = nil
         activeCharacter[src] = nil
     end
-    identifiers[src] = nil
 end)
 
 -- Internal helper ---------------------------------------------------------
+
+---@param source integer
+---@return string?
+local function getIdentifier(source)
+    return GetPlayerIdentifierByType(source --[[@as string]], 'license')
+end
 
 ---@param source integer
 ---@return table?
@@ -167,11 +168,8 @@ end
 ---@param source integer
 ---@return table[] 3 slots: { slotIndex, occupied, id?, name?, model?, level? }
 local function getCharacterSlots(source)
-    local identifier = identifiers[source]
-    if not identifier then
-        print(('^1[rsl_playerConnecting]^7 getCharacterSlots(#%d): no cached identifier'):format(source))
-        return {}
-    end
+    local identifier = getIdentifier(source)
+    if not identifier then return {} end
 
     local rows = MySQL.query.await(
         'SELECT id, slot_index, name, model, level, appearance FROM rsl_characters WHERE owner_identifier = ?',
@@ -202,7 +200,7 @@ end
 ---@param characterId string
 ---@return table? character data for the client to apply/spawn with
 local function selectCharacter(source, characterId)
-    local identifier = identifiers[source]
+    local identifier = getIdentifier(source)
     if not identifier or type(characterId) ~= 'string' then return nil end
 
     local row = MySQL.single.await(
@@ -223,7 +221,7 @@ end
 ---@param appearance table
 ---@return table? character data for the client to apply/spawn with
 local function createCharacter(source, slotIndex, name, model, appearance)
-    local identifier = identifiers[source]
+    local identifier = getIdentifier(source)
     if not identifier then return nil end
     if type(slotIndex) ~= 'number' or slotIndex < 1 or slotIndex > RSLConfig.CHARACTER_SLOTS then return nil end
     if type(name) ~= 'string' or #name < 1 or #name > 32 then return nil end
@@ -254,7 +252,7 @@ end
 ---@param characterId string
 ---@return boolean
 local function deleteCharacter(source, characterId)
-    local identifier = identifiers[source]
+    local identifier = getIdentifier(source)
     if not identifier or type(characterId) ~= 'string' then return false end
 
     local owned = MySQL.scalar.await('SELECT 1 FROM rsl_characters WHERE id = ? AND owner_identifier = ?', { characterId, identifier })
