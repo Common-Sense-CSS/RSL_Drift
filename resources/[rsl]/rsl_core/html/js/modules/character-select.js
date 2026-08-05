@@ -50,4 +50,10 @@
     RSL.on('characterSelect:hide', () => {
         root.classList.remove('rsl-modal--visible');
     });
+
+    // Tell Lua this page can actually receive characterSelect:show now —
+    // on a fresh connect, Lua enters MAIN_MENU almost immediately, and
+    // without this handshake the show message can arrive before this
+    // script has even run, leaving the player stuck on a blank screen.
+    RSL.post('characterSelect:ready');
 })();
