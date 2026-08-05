@@ -8,7 +8,7 @@ RSLGarages = {
     {
         id = 'garage_start',
         name = 'RSL Garage',
-        coords = vector3(-206.0, -1010.0, 24.35),
-        spawnCoords = vector4(-200.0, -1005.0, 24.35, 40.0),
+        coords = vector3(-252.6908, -1008.1157, 29.0049),
+        spawnCoords = vector4(-252.6908, -1008.1157, 29.0049, 244.8474),
     },
 }

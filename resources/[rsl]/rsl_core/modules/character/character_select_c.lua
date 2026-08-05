@@ -94,7 +94,10 @@ RegisterNetEvent('rsl_character:selected', function(character)
     SendNUIMessage({ action = 'characterCreator:hide' })
     SetNuiFocus(false, false)
 
-    RSLHelpers.SpawnPlayer(character.model, RSLConfig.DEFAULT_SPAWN, function()
+    local lastPos = character.data and character.data.lastPosition
+    local spawnCoords = lastPos and vector4(lastPos.x, lastPos.y, lastPos.z, lastPos.heading) or RSLConfig.DEFAULT_SPAWN
+
+    RSLHelpers.SpawnPlayer(character.model, spawnCoords, function()
         local ped = PlayerPedId()
         RSLAppearance.Apply(ped, character.model, character.appearance)
         Entity(ped).state:set('rsl:appearance', { model = character.model, appearance = character.appearance }, true)
@@ -142,6 +145,7 @@ exports['rsl_core']:RegisterGameState(GameState.MAIN_MENU, {
         requestSlots()
     end,
     onExit = function(nextState)
+        SendNUIMessage({ action = 'characterSelect:hide' })
         if nextState ~= GameState.AVATAR then
             SetNuiFocus(false, false)
         end

@@ -74,9 +74,26 @@ local function persistCharacter(characterId)
     char.dirty = false
 end
 
+---@param source integer
+local function saveLastPosition(source)
+    local characterId = activeCharacter[source]
+    local char = characterId and characters[characterId]
+    if not char then return end
+
+    local ped = GetPlayerPed(source --[[@as string]])
+    if not ped or ped == 0 then return end
+
+    local coords = GetEntityCoords(ped)
+    char.data.lastPosition = { x = coords.x, y = coords.y, z = coords.z, heading = GetEntityHeading(ped) }
+    char.dirty = true
+end
+
 CreateThread(function()
     while true do
         Wait(RSLConfig.SAVE_INTERVAL_MS)
+        for src in pairs(activeCharacter) do
+            saveLastPosition(src)
+        end
         for characterId in pairs(characters) do
             persistCharacter(characterId)
         end
@@ -121,6 +138,7 @@ AddEventHandler('playerDropped', function()
     local src = source --[[@as integer]]
     local characterId = activeCharacter[src]
     if characterId then
+        saveLastPosition(src)
         persistCharacter(characterId)
         characters[characterId] = nil
         activeCharacter[src] = nil

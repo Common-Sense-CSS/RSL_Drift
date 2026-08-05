@@ -36,7 +36,7 @@ local function addVehicleToGarage(characterId, model, garageId)
     local id = MySQL.scalar.await('SELECT UUID()')
     local plate = generatePlate()
     MySQL.insert.await(
-        'INSERT INTO rsl_vehicles (id, owner_character_id, model, plate, garage_id, stored, mods, tuning) VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
+        'INSERT INTO rsl_vehicles (id, owner_character_id, model, plate, garage_id, `stored`, mods, tuning) VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
         { id, characterId, model, plate, garageId, '{}', '{}' }
     )
     return id
@@ -48,7 +48,7 @@ local function getOwnedVehicles(source)
     local characterId = exports['rsl_core']:GetActiveCharacterId(source)
     if not characterId then return {} end
     local rows = MySQL.query.await(
-        'SELECT id, model, plate, garage_id, stored, xp, level FROM rsl_vehicles WHERE owner_character_id = ? ORDER BY created_at ASC',
+        'SELECT id, model, plate, garage_id, `stored`, xp, level FROM rsl_vehicles WHERE owner_character_id = ? ORDER BY created_at ASC',
         { characterId }
     )
     for _, row in ipairs(rows) do normalizeStored(row) end
@@ -62,7 +62,7 @@ RegisterNetEvent('rsl_garage:requestList', function(garageId)
     if not characterId then return end
 
     local vehicles = MySQL.query.await(
-        'SELECT id, model, plate, garage_id, stored FROM rsl_vehicles WHERE owner_character_id = ? AND garage_id = ? ORDER BY created_at ASC',
+        'SELECT id, model, plate, garage_id, `stored` FROM rsl_vehicles WHERE owner_character_id = ? AND garage_id = ? ORDER BY created_at ASC',
         { characterId, garageId }
     )
     for _, row in ipairs(vehicles) do normalizeStored(row) end
@@ -76,14 +76,14 @@ RegisterNetEvent('rsl_garage:spawnVehicle', function(vehicleId)
     if not characterId then return end
 
     local row = MySQL.single.await(
-        'SELECT id, model, plate, garage_id, stored FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
+        'SELECT id, model, plate, garage_id, `stored` FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
         { vehicleId, characterId }
     )
     if not row then return end
     normalizeStored(row)
     if row.stored == 0 then return end
 
-    MySQL.update.await('UPDATE rsl_vehicles SET stored = 0 WHERE id = ?', { vehicleId })
+    MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 0 WHERE id = ?', { vehicleId })
     TriggerClientEvent('rsl_garage:doSpawn', src, row)
 end)
 
@@ -94,14 +94,14 @@ RegisterNetEvent('rsl_garage:storeVehicle', function(vehicleId, plate)
     if not characterId then return end
 
     local row = MySQL.single.await(
-        'SELECT id, plate, stored FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
+        'SELECT id, plate, `stored` FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
         { vehicleId, characterId }
     )
     if not row then return end
     normalizeStored(row)
     if row.stored == 1 or row.plate ~= plate then return end
 
-    MySQL.update.await('UPDATE rsl_vehicles SET stored = 1 WHERE id = ?', { vehicleId })
+    MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 1 WHERE id = ?', { vehicleId })
     TriggerClientEvent('rsl_garage:stored', src, vehicleId)
 end)
 
