@@ -88,6 +88,7 @@ end)
 
 AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
     local src = source
+    print(('^3[rsl_playerConnecting]^7 fired for #%d, dbReady=%s'):format(src, tostring(dbReady)))
     deferrals.defer()
     Wait(0)
 
@@ -99,6 +100,7 @@ AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
             waited = waited + 250
         end
         if not dbReady then
+            print(('^1[rsl_playerConnecting]^7 #%d rejected: database never became ready'):format(src))
             deferrals.done('Database is not ready. Please try reconnecting shortly.')
             return
         end
@@ -107,12 +109,15 @@ AddEventHandler('playerConnecting', function(_name, _setKickReason, deferrals)
     deferrals.update('Verifying your account...')
 
     local identifier = GetPlayerIdentifierByType(src --[[@as string]], 'license')
+    print(('^3[rsl_playerConnecting]^7 #%d GetPlayerIdentifierByType(license) = %s'):format(src, tostring(identifier)))
     if not identifier then
+        print(('^1[rsl_playerConnecting]^7 #%d rejected: no license identifier'):format(src))
         deferrals.done('Could not verify your license identifier.')
         return
     end
 
     identifiers[src] = identifier
+    print(('^2[rsl_playerConnecting]^7 #%d identifier stored, calling deferrals.done()'):format(src))
     deferrals.done()
 end)
 
@@ -163,7 +168,10 @@ end
 ---@return table[] 3 slots: { slotIndex, occupied, id?, name?, model?, level? }
 local function getCharacterSlots(source)
     local identifier = identifiers[source]
-    if not identifier then return {} end
+    if not identifier then
+        print(('^1[rsl_playerConnecting]^7 getCharacterSlots(#%d): no cached identifier'):format(source))
+        return {}
+    end
 
     local rows = MySQL.query.await(
         'SELECT id, slot_index, name, model, level, appearance FROM rsl_characters WHERE owner_identifier = ?',
