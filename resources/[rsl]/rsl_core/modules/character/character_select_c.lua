@@ -53,7 +53,6 @@ local nuiReady = false
 local slotsRequestPending = false
 
 local function requestSlots()
-    TriggerServerEvent('rsl_debug:log', ('requestSlots(), nuiReady=%s'):format(tostring(nuiReady)))
     if nuiReady then
         TriggerServerEvent('rsl_character:requestSlots')
     else
@@ -65,20 +64,12 @@ local function requestSlots()
 end
 
 RegisterNUICallback('characterSelect:ready', function(_, cb)
-    TriggerServerEvent('rsl_debug:log', 'characterSelect:ready NUI callback fired')
     nuiReady = true
     if slotsRequestPending then
         slotsRequestPending = false
         TriggerServerEvent('rsl_character:requestSlots')
     end
     cb('ok')
-end)
-
-CreateThread(function()
-    Wait(8000)
-    if not nuiReady then
-        TriggerServerEvent('rsl_debug:log', 'NUI never signaled ready after 8s')
-    end
 end)
 
 RegisterNetEvent('rsl_character:slots', function(newSlots)
@@ -139,7 +130,6 @@ end)
 
 exports['rsl_core']:RegisterGameState(GameState.MAIN_MENU, {
     onEnter = function()
-        TriggerServerEvent('rsl_debug:log', 'MAIN_MENU onEnter fired')
         enterPreviewPose()
         SetNuiFocus(true, true)
         requestSlots()

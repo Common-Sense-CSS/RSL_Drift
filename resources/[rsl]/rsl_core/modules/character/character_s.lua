@@ -3,10 +3,6 @@
 -- that file focused on the data layer and this one on the request/response
 -- flow the character-select/creator NUI drives.
 
-RegisterNetEvent('rsl_debug:log', function(msg)
-    print(('^5[rsl_debug]^7 #%d: %s'):format(source, tostring(msg)))
-end)
-
 RegisterNetEvent('rsl_character:requestSlots', function()
     local src = source
     local slots = exports['rsl_core']:GetCharacterSlots(src)
