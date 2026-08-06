@@ -12,7 +12,7 @@ RSLDealerships = {
         name = 'RSL Dealership',
         coords = vector3(-297.2243, -980.2850, 31.0806),
         spawnCoords = vector4(-297.2243, -980.2850, 31.0806, 160.0),
-        defaultGarageId = 'garage_start',
+        defaultGarageId = 'sapcounsel',
     },
     -- UNVERIFIED placeholder, test in-game — Premium Deluxe Motorsport showroom
     {
@@ -20,7 +20,7 @@ RSLDealerships = {
         name = 'Premium Deluxe Motorsport',
         coords = vector3(-56.9, -1096.4, 26.4),
         spawnCoords = vector4(-46.0, -1096.4, 26.4, 210.0),
-        defaultGarageId = 'garage_textile',
+        defaultGarageId = 'pillboxgarage',
     },
     -- UNVERIFIED placeholder, test in-game — open lot near the docks
     {
@@ -28,6 +28,6 @@ RSLDealerships = {
         name = 'Dockside Motors',
         coords = vector3(1000.0, -1090.0, 30.0),
         spawnCoords = vector4(1010.0, -1090.0, 30.0, 90.0),
-        defaultGarageId = 'garage_rockford',
+        defaultGarageId = 'motelgarage',
     },
 }
