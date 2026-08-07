@@ -6,13 +6,16 @@ export API.
 
 ## Status
 
-Phase 1 (framework skeleton), Phase 2 (vehicles & progression), and the
-multi-character system are complete:
+Phase 1 (framework skeleton), Phase 2 (vehicles & progression), the
+multi-character system, and the inventory system are complete:
 
 - `rsl_core` — player identity/economy/XP (per-character), game-state
-  machine, notifications, HUD, garage, dealership, admin commands, and a
-  3-slot character system with full appearance customization (see `RSL_API.md`).
+  machine, notifications, HUD, garage, dealership, general-purpose
+  inventory, admin commands, and a 3-slot character system with full
+  appearance customization (see `RSL_API.md`).
 - `rsl_drift` — scaffolded, depends on `rsl_core`, no drift gameplay yet.
+- `rsl_loadscreen` — custom purple-themed loading screen shown while the
+  client connects (static HTML, no logic).
 
 **Breaking change:** the database schema changed from account-scoped to
 character-scoped (`rsl_players` → `rsl_characters`, vehicles/scores now key
@@ -21,9 +24,9 @@ off character id). If you have an existing test database, drop `rsl_players`,
 this automatically on a fresh apply, but only for tables it manages, so make
 sure you're running the current `schema.sql`, not a cached copy.
 
-An inventory system and a health/hunger/thirst/stamina status HUD are next.
-Drift scoring & zones, tandem detection, leaderboards/ghosts, tuning, and the
-tablet/drift-battle UI land in later phases.
+A health/hunger/thirst/stamina status HUD (using the inventory for refills)
+is next. Drift scoring & zones, tandem detection, leaderboards/ghosts,
+tuning, and the tablet/drift-battle UI land in later phases.
 
 ## Setup
 
@@ -89,8 +92,9 @@ RSL Drift server/          -- also the root of the Common-Sense-CSS/RSL_Drift re
   .gitignore
   resources/
     [rsl]/
-      rsl_core/    -- the framework
-      rsl_drift/   -- drift gameplay, built on rsl_core's exports
+      rsl_core/       -- the framework
+      rsl_drift/      -- drift gameplay, built on rsl_core's exports
+      rsl_loadscreen/ -- custom loading screen (static HTML, no Lua)
 ```
 
 ## Configuration

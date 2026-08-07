@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>RSL Drift — Loading</title>
+<style>
+    :root {
+        --rsl-accent-400: #a970ff;
+        --rsl-accent-500: #8b3dff;
+        --rsl-accent-600: #7220e6;
+        --rsl-bg-0: #07050d;
+        --rsl-text-0: #f5f2ff;
+        --rsl-text-2: #8d80ab;
+        --rsl-border: rgba(168, 112, 255, 0.28);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--rsl-bg-0);
+        font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background:
+            radial-gradient(circle at 50% 30%, rgba(139, 61, 255, 0.20), transparent 60%),
+            var(--rsl-bg-0);
+    }
+
+    .wordmark {
+        font-family: 'Orbitron', 'Rajdhani', 'Segoe UI', sans-serif;
+        font-size: 64px;
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        color: var(--rsl-text-0);
+        text-shadow: 0 0 30px rgba(139, 61, 255, 0.55);
+    }
+
+    .wordmark span {
+        color: var(--rsl-accent-400);
+    }
+
+    .subtitle {
+        margin-top: 14px;
+        font-size: 13px;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: var(--rsl-text-2);
+    }
+
+    .bar-track {
+        margin-top: 48px;
+        width: 320px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(168, 112, 255, 0.15);
+        border: 1px solid var(--rsl-border);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .bar-fill {
+        position: absolute;
+        top: 0;
+        left: -40%;
+        height: 100%;
+        width: 40%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--rsl-accent-600), var(--rsl-accent-400));
+        animation: sweep 1.6s ease-in-out infinite;
+    }
+
+    @keyframes sweep {
+        0%   { left: -40%; }
+        100% { left: 100%; }
+    }
+
+    .tip {
+        position: absolute;
+        bottom: 40px;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--rsl-text-2);
+    }
+</style>
+</head>
+<body>
+    <div class="wordmark">RSL <span>DRIFT</span></div>
+    <div class="subtitle">Loading</div>
+    <div class="bar-track"><div class="bar-fill"></div></div>
+    <div class="tip" id="rsl-loadscreen-tip"></div>
+
+    <script>
+        var tips = [
+            'Tip: garages hold up to 15 vehicles each, and you can nickname them.',
+            'Tip: taking out a car auto-returns whatever you’re currently driving to storage.',
+            'Tip: dealership purchases always let you choose which garage to send the car to.',
+        ];
+        document.getElementById('rsl-loadscreen-tip').textContent = tips[Math.floor(Math.random() * tips.length)];
+    </script>
+</body>
+</html>

@@ -45,6 +45,7 @@ tasks:
       ensure oxmysql
       ensure ox_lib
 
+      ensure rsl_loadscreen
       ensure rsl_core
       ensure rsl_drift
 
