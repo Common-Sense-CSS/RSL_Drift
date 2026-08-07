@@ -66,6 +66,17 @@ RegisterNetEvent('rsl_garage:list', function(vehicles, garageId, meta)
     SendNUIMessage({ action = 'garage:show', vehicles = vehicles, garageId = garageId, meta = meta })
 end)
 
+-- If the client can't actually place a vehicle (unresolved garage data,
+-- model load timeout, etc.) the server has already flipped it to `stored =
+-- 0` before telling us to spawn it — without this, that failure would
+-- silently strand the vehicle as neither stored nor in the world. Tell the
+-- server to revert it and let the player know instead.
+---@param vehicleId string
+local function reportSpawnFailed(vehicleId)
+    TriggerServerEvent('rsl_garage:spawnFailed', vehicleId)
+    exports['rsl_core']:ShowNotification({ title = 'Could not spawn that vehicle — returned to storage.', type = 'error' })
+end
+
 RegisterNetEvent('rsl_garage:doSpawn', function(vehicle, previousList, coordsOverride)
     -- Auto-return: delete any vehicle the server says this character had out
     -- elsewhere, before spawning the newly requested one.
@@ -84,10 +95,16 @@ RegisterNetEvent('rsl_garage:doSpawn', function(vehicle, previousList, coordsOve
         if g.id == vehicle.garage_id then garage = g break end
     end
     local spawn = coordsOverride or (garage and garage.spawnCoords)
-    if not spawn then return end
+    if not spawn then
+        reportSpawnFailed(vehicle.id)
+        return
+    end
 
     local hash = GetHashKey(vehicle.model)
-    if not loadModel(hash) then return end
+    if not loadModel(hash) then
+        reportSpawnFailed(vehicle.id)
+        return
+    end
 
     local veh = CreateVehicle(hash, spawn.x, spawn.y, spawn.z, spawn.w, true, false)
     PlaceObjectOnGroundProperly(veh)

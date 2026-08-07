@@ -194,6 +194,25 @@ RegisterNetEvent('rsl_garage:reportSpawned', function(vehicleId, netId)
     outVehicleNetId[vehicleId] = netId
 end)
 
+-- Client couldn't actually place the vehicle it was just told to spawn
+-- (unresolved garage data, model load timeout, etc.) — revert it back to
+-- stored instead of leaving it flagged `stored = 0` with no world entity.
+RegisterNetEvent('rsl_garage:spawnFailed', function(vehicleId)
+    local src = source
+    if type(vehicleId) ~= 'string' then return end
+    local characterId = exports['rsl_core']:GetActiveCharacterId(src)
+    if not characterId then return end
+
+    local row = MySQL.single.await(
+        'SELECT id FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
+        { vehicleId, characterId }
+    )
+    if not row then return end
+
+    MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 1 WHERE id = ?', { vehicleId })
+    outVehicleNetId[vehicleId] = nil
+end)
+
 RegisterNetEvent('rsl_garage:storeVehicle', function(vehicleId, plate)
     local src = source
     if type(vehicleId) ~= 'string' or type(plate) ~= 'string' then return end

@@ -134,9 +134,9 @@ Garage names are personal nicknames — each character can optionally rename any
 | `GetGarageVehicleCount(characterId, garageId)` | character id, garage id | `integer` | Total vehicles (stored or out) that character has assigned to that garage — compare against `RSLConfig.GARAGE_MAX_VEHICLES` before adding another. |
 | `GetGarageName(source, garageId)` | server id, garage id | `string` | The garage's effective name for that player — their personal nickname if they've set one, else the default from `RSLGarages`. |
 
-Garage locations are defined in `data/rsl_garages.lua` (`RSLGarages`, shared) — each entry is `{ id, name, coords, spawnCoords }`. Dealership locations and the vehicle catalog are in `data/rsl_dealerships.lua` (`RSLDealerships`, each `{ id, name, coords, spawnCoords, defaultGarageId }`) and `data/rsl_vehicles.lua` (`RSLVehicles`, each entry has a `category` used for the dealership's filter tabs), both shared — add-ons can read them directly rather than through an export.
+Garage locations are defined in `data/rsl_garages.lua` (`RSLGarages`, shared) — each entry is `{ id, name, coords, spawnCoords }`. Dealership locations and the vehicle catalog are in `data/rsl_dealerships.lua` (`RSLDealerships`, each `{ id, name, coords, spawnCoords }`) and `data/rsl_vehicles.lua` (`RSLVehicles`, each entry has a `category` used for the dealership's filter tabs), both shared — add-ons can read them directly rather than through an export.
 
-At the dealership, purchases carry a `mode`: `'drive'` spawns the car immediately at the dealership's `spawnCoords`; `'garage'` sends it (stored) to a player-chosen garage, rejected before any cash is taken if that garage is already at capacity.
+At the dealership, every purchase requires the player to pick a real garage — there's no default. Purchases carry a `mode`: `'drive'` still spawns the car immediately at the dealership's `spawnCoords`, but its `garage_id` is the chosen garage (so a later auto-swap — see `SpawnOwnedVehicle` above — has a real home to return it to instead of a fixed default); `'garage'` sends it (stored) straight to the chosen garage. Either way it's rejected before any cash is taken if that garage is already at capacity.
 
 ### Characters
 

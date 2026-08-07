@@ -4,7 +4,9 @@
 -- dealer-style spots) — test each in-game and report back corrected
 -- coords/headings, same as dealership_start originally was.
 -- `coords` is the interaction marker/blip; `spawnCoords` is where a
--- "drive now" purchase spawns (in front of the doors).
+-- "drive now" purchase spawns (in front of the doors). Every purchase
+-- requires the player to pick a real garage (see dealership_s.lua) — there's
+-- no default garage here anymore.
 
 RSLDealerships = {
     {
@@ -12,7 +14,6 @@ RSLDealerships = {
         name = 'RSL Dealership',
         coords = vector3(-297.2243, -980.2850, 31.0806),
         spawnCoords = vector4(-297.2243, -980.2850, 31.0806, 160.0),
-        defaultGarageId = 'sapcounsel',
     },
     -- UNVERIFIED placeholder, test in-game — Premium Deluxe Motorsport showroom
     {
@@ -20,7 +21,6 @@ RSLDealerships = {
         name = 'Premium Deluxe Motorsport',
         coords = vector3(-56.9, -1096.4, 26.4),
         spawnCoords = vector4(-46.0, -1096.4, 26.4, 210.0),
-        defaultGarageId = 'pillboxgarage',
     },
     -- UNVERIFIED placeholder, test in-game — open lot near the docks
     {
@@ -28,6 +28,5 @@ RSLDealerships = {
         name = 'Dockside Motors',
         coords = vector3(1000.0, -1090.0, 30.0),
         spawnCoords = vector4(1010.0, -1090.0, 30.0, 90.0),
-        defaultGarageId = 'motelgarage',
     },
 }

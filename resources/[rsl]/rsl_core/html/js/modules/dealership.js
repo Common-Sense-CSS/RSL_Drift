@@ -14,6 +14,7 @@
     let catalogAll = [];
     let activeCategory = 'all';
     let pendingVehicle = null;
+    let pendingMode = null;
 
     function renderTabs() {
         const categories = [...new Set(catalogAll.map((v) => v.category).filter(Boolean))];
@@ -61,6 +62,7 @@
 
     function openBuyModal(vehicle) {
         pendingVehicle = vehicle;
+        pendingMode = null;
         buyTitle.textContent = vehicle.label;
         buyChoice.hidden = false;
         buyGarages.hidden = true;
@@ -70,7 +72,13 @@
 
     function closeBuyModal() {
         pendingVehicle = null;
+        pendingMode = null;
         buyRoot.classList.remove('rsl-modal--visible');
+    }
+
+    function pickMode(mode) {
+        pendingMode = mode;
+        RSL.post('dealership:requestGarages');
     }
 
     function renderGarages(garages) {
@@ -96,8 +104,8 @@
             const btn = row.querySelector('button');
             if (!garage.full) {
                 btn.addEventListener('click', () => {
-                    if (!pendingVehicle) return;
-                    RSL.post('dealership:buy', { model: pendingVehicle.model, mode: 'garage', garageId: garage.id });
+                    if (!pendingVehicle || !pendingMode) return;
+                    RSL.post('dealership:buy', { model: pendingVehicle.model, mode: pendingMode, garageId: garage.id });
                 });
             }
             buyGarages.appendChild(row);
@@ -127,11 +135,12 @@
 
     buyDrive.addEventListener('click', () => {
         if (!pendingVehicle) return;
-        RSL.post('dealership:buy', { model: pendingVehicle.model, mode: 'drive' });
+        pickMode('drive');
     });
 
     buyGarageBtn.addEventListener('click', () => {
-        RSL.post('dealership:requestGarages');
+        if (!pendingVehicle) return;
+        pickMode('garage');
     });
 
     buyClose.addEventListener('click', closeBuyModal);

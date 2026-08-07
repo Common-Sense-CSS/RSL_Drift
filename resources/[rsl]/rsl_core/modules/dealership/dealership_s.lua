@@ -45,15 +45,15 @@ RegisterNetEvent('rsl_dealership:purchase', function(model, dealershipId, mode, 
     local characterId = exports['rsl_core']:GetActiveCharacterId(src)
     if not characterId then return end
 
-    local targetGarageId = dealership.defaultGarageId
-    if mode == 'garage' then
-        if type(garageId) ~= 'string' or not findGarage(garageId) then return end
-        local count = exports['rsl_core']:GetGarageVehicleCount(characterId, garageId)
-        if count >= RSLConfig.GARAGE_MAX_VEHICLES then
-            TriggerClientEvent('rsl_dealership:purchaseResult', src, false, 'That garage is full.')
-            return
-        end
-        targetGarageId = garageId
+    -- A garage is required either way now — "drive now" needs a real home
+    -- garage too, so a later auto-swap (see garage_s.lua's
+    -- spawnVehicleForCharacter) has somewhere to actually return it instead
+    -- of a fixed default the player never chose.
+    if type(garageId) ~= 'string' or not findGarage(garageId) then return end
+    local count = exports['rsl_core']:GetGarageVehicleCount(characterId, garageId)
+    if count >= RSLConfig.GARAGE_MAX_VEHICLES then
+        TriggerClientEvent('rsl_dealership:purchaseResult', src, false, 'That garage is full.')
+        return
     end
 
     local ok = exports['rsl_core']:RemovePlayerCash(src, vehicle.price)
@@ -62,13 +62,13 @@ RegisterNetEvent('rsl_dealership:purchase', function(model, dealershipId, mode, 
         return
     end
 
-    local vehicleId = exports['rsl_core']:AddVehicleToGarage(characterId, model, targetGarageId)
+    local vehicleId = exports['rsl_core']:AddVehicleToGarage(characterId, model, garageId)
 
     if mode == 'drive' then
         exports['rsl_core']:SpawnOwnedVehicle(src, characterId, vehicleId, dealership.spawnCoords)
         TriggerClientEvent('rsl_dealership:purchaseResult', src, true, ('Purchased %s!'):format(vehicle.label))
     else
-        local garageName = exports['rsl_core']:GetGarageName(src, targetGarageId)
+        local garageName = exports['rsl_core']:GetGarageName(src, garageId)
         TriggerClientEvent('rsl_dealership:purchaseResult', src, true, ('Purchased %s! Sent to %s.'):format(vehicle.label, garageName))
     end
 end)

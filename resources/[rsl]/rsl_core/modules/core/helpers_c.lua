@@ -2,6 +2,28 @@
 
 RSLHelpers = {}
 
+-- Disable spawnmanager's autospawn immediately at resource start (not just
+-- inside SpawnPlayer below). basic-gamemode turns autospawn ON and registers
+-- its own random points when IT starts — both it and rsl_core start once at
+-- server boot, before any player connects, so doing this here (not reactively
+-- once a character is selected) wins that race. Without this, a player who
+-- connects and gets their client-side spawn assigned before the character
+-- select NUI round-trip finishes gets randomly placed by vanilla spawnmanager
+-- first, which is exactly the "random spawn like base FiveM" symptom.
+exports.spawnmanager:setAutoSpawn(false)
+
+-- FXServer's built-in "Awaiting scripts" connecting screen is normally
+-- dismissed automatically once the player gets a prompt vanilla spawn — but
+-- we deliberately defer spawning until character select is finished, which
+-- can take as long as the player wants. Left waiting, the client can fall
+-- back to its own default placement logic, independent of spawnmanager
+-- entirely (this is what produced the Zancudo River spawn, not the
+-- autospawn race above). Every framework doing custom character selection
+-- (ESX, QBCore, etc.) explicitly hands off from the connect screen instead
+-- of waiting on a vanilla spawn — do the same, immediately at resource start.
+ShutdownLoadingScreen()
+ShutdownLoadingScreenNui()
+
 ---@param coords vector3
 ---@param text string
 function RSLHelpers.DrawText3D(coords, text)

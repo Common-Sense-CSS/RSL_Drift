@@ -11,7 +11,7 @@ RSLGarages = {
     { id = 'sapcounsel',       name = 'San Andreas Parking',       coords = vector3(-330.01, -780.33, 33.96),     spawnCoords = vector4(-334.44, -780.75, 33.96, 137.5) },
     { id = 'spanishave',       name = 'Spanish Ave Parking',       coords = vector3(-1160.86, -741.41, 19.63),    spawnCoords = vector4(-1163.88, -749.32, 18.42, 35.5) },
     { id = 'caears24',         name = 'Caears 24 Parking',         coords = vector3(69.84, 12.6, 68.96),          spawnCoords = vector4(73.21, 10.72, 68.83, 163.5) },
-    { id = 'caears242',        name = 'Caears 24 Parking',         coords = vector3(-475.31, -818.73, 30.46),     spawnCoords = vector4(-472.03, -815.47, 30.5, 177.5) },
+    { id = 'caears242',        name = 'Caears 24 Parking (2)',     coords = vector3(-475.31, -818.73, 30.46),     spawnCoords = vector4(-472.03, -815.47, 30.5, 177.5) },
     { id = 'lagunapi',         name = 'Laguna Parking',            coords = vector3(364.37, 297.83, 103.49),      spawnCoords = vector4(367.49, 297.71, 103.43, 340.5) },
     { id = 'airportp',         name = 'Airport Parking',           coords = vector3(-796.86, -2024.85, 8.88),     spawnCoords = vector4(-800.41, -2016.53, 9.32, 48.5) },
     { id = 'beachp',           name = 'Beach Parking',             coords = vector3(-1183.1, -1511.11, 4.36),     spawnCoords = vector4(-1181.0, -1505.98, 4.37, 214.5) },
