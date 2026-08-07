@@ -2,9 +2,10 @@
 -- Vehicle ownership storage. Rows live in `rsl_vehicles`; `stored = 1` means
 -- parked in the garage, `stored = 0` means currently out in the world.
 -- Ownership is scoped to the active character, not the account. A vehicle's
--- `garage_id` is assigned once (on purchase) and never changes — capacity is
--- therefore only checked at creation time (see dealership_s.lua), not when
--- toggling `stored`.
+-- `garage_id` is its home garage — set at purchase (see dealership_s.lua,
+-- which checks capacity there) and re-homed whenever the player stores it at
+-- a *different* garage than its current one (see `rsl_garage:storeVehicle`
+-- below, which checks capacity for that case too).
 
 local PLATE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
@@ -213,23 +214,39 @@ RegisterNetEvent('rsl_garage:spawnFailed', function(vehicleId)
     outVehicleNetId[vehicleId] = nil
 end)
 
-RegisterNetEvent('rsl_garage:storeVehicle', function(vehicleId, plate)
+-- Stores whatever vehicle the player is currently driving at `garageId` —
+-- not necessarily that vehicle's current home garage. Identified by plate
+-- (the client can only reliably know the plate of the car it's sitting in,
+-- not a listed vehicle id, since the car may not belong to this garage at
+-- all yet). If it's being re-homed to a different garage than it already
+-- belongs to, that garage's capacity is checked first — same rule as a
+-- fresh purchase, since this is genuinely adding a vehicle to it.
+RegisterNetEvent('rsl_garage:storeVehicle', function(garageId, plate)
     local src = source
-    if type(vehicleId) ~= 'string' or type(plate) ~= 'string' then return end
+    if type(garageId) ~= 'string' or type(plate) ~= 'string' then return end
+    if not findGarage(garageId) then return end
     local characterId = exports['rsl_core']:GetActiveCharacterId(src)
     if not characterId then return end
 
     local row = MySQL.single.await(
-        'SELECT id, plate, `stored` FROM rsl_vehicles WHERE id = ? AND owner_character_id = ?',
-        { vehicleId, characterId }
+        'SELECT id, garage_id, `stored` FROM rsl_vehicles WHERE plate = ? AND owner_character_id = ?',
+        { plate, characterId }
     )
     if not row then return end
     normalizeStored(row)
-    if row.stored == 1 or row.plate ~= plate then return end
+    if row.stored == 1 then return end
 
-    MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 1 WHERE id = ?', { vehicleId })
-    outVehicleNetId[vehicleId] = nil
-    TriggerClientEvent('rsl_garage:stored', src, vehicleId)
+    if row.garage_id ~= garageId then
+        local count = getGarageVehicleCount(characterId, garageId)
+        if count >= RSLConfig.GARAGE_MAX_VEHICLES then
+            TriggerClientEvent('rsl_garage:storeFailed', src, 'That garage is full.')
+            return
+        end
+    end
+
+    MySQL.update.await('UPDATE rsl_vehicles SET `stored` = 1, garage_id = ? WHERE id = ?', { garageId, row.id })
+    outVehicleNetId[row.id] = nil
+    TriggerClientEvent('rsl_garage:stored', src, row.id)
 end)
 
 exports('GetOwnedVehicles', getOwnedVehicles)

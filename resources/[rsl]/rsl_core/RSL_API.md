@@ -120,9 +120,9 @@ local zone = exports['rsl_core']:ReadPlayerData(source, 'myAddon.favoriteZone')
 
 ### Garage / Vehicles
 
-Vehicle rows live in `rsl_vehicles` (see `sql/schema.sql`), each owned by a **character id** (not an account). `mods`/`tuning` JSON columns exist for later phases and are currently always `{}`. A vehicle's `garage_id` is assigned once, at creation, and never changes — taking it out and storing it again just toggles `stored` within that same garage.
+Vehicle rows live in `rsl_vehicles` (see `sql/schema.sql`), each owned by a **character id** (not an account). `mods`/`tuning` JSON columns exist for later phases and are currently always `{}`. A vehicle's `garage_id` is its home garage — set at purchase, and re-homed whenever the player stores it at a different garage than the one it currently belongs to (drive it there and use that garage's "Store Current Vehicle Here" action; capacity on the new garage is checked first, same as a fresh purchase).
 
-Each garage holds at most `RSLConfig.GARAGE_MAX_VEHICLES` (15) vehicles **per character** — counted across both stored and currently-out vehicles, since `garage_id` is permanent. Only one vehicle can be "out" per character at a time: requesting a different one auto-stores whichever vehicle is currently out, back at its own garage (this is what `SpawnOwnedVehicle` below handles).
+Each garage holds at most `RSLConfig.GARAGE_MAX_VEHICLES` (15) vehicles **per character** — counted across both stored and currently-out vehicles, since a vehicle always has exactly one `garage_id` at a time. Only one vehicle can be "out" per character at all: requesting a different one auto-stores whichever vehicle is currently out, back at its own (current) garage (this is what `SpawnOwnedVehicle` below handles).
 
 Garage names are personal nicknames — each character can optionally rename any garage for themselves (stored in their own `data` JSON via `WritePlayerData`, path `garageNames.<garageId>`); other characters/players still see the default name from `RSLGarages` unless they've set their own.
 

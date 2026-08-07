@@ -3,12 +3,14 @@
 -- player's vehicles stored at that garage.
 
 local isOpen = false
+local currentGarageId = nil
 local garageNames = {} ---@type table<string, string> garageId -> effective name (nickname or default)
 local garageBlips = {} ---@type table<string, integer> garageId -> blip handle
 
 local function closeGarage()
     if not isOpen then return end
     isOpen = false
+    currentGarageId = nil
     SetNuiFocus(false, false)
     SendNUIMessage({ action = 'garage:hide' })
 end
@@ -62,8 +64,13 @@ end)
 
 RegisterNetEvent('rsl_garage:list', function(vehicles, garageId, meta)
     isOpen = true
+    currentGarageId = garageId
     SetNuiFocus(true, true)
     SendNUIMessage({ action = 'garage:show', vehicles = vehicles, garageId = garageId, meta = meta })
+end)
+
+RegisterNetEvent('rsl_garage:storeFailed', function(message)
+    exports['rsl_core']:ShowNotification({ title = message, type = 'error' })
 end)
 
 -- If the client can't actually place a vehicle (unresolved garage data,
@@ -137,7 +144,12 @@ RegisterNUICallback('garage:spawn', function(data, cb)
     cb('ok')
 end)
 
-RegisterNUICallback('garage:store', function(data, cb)
+-- Stores whatever vehicle the player is currently driving, at whichever
+-- garage's modal is open — not necessarily that vehicle's own home garage,
+-- so this also covers dropping a car off somewhere new.
+RegisterNUICallback('garage:store', function(_, cb)
+    if not currentGarageId then cb('ok') return end
+
     local ped = PlayerPedId()
     local plate = nil
     if IsPedInAnyVehicle(ped, false) then
@@ -146,8 +158,11 @@ RegisterNUICallback('garage:store', function(data, cb)
             plate = GetVehicleNumberPlateText(veh):gsub('%s+$', '')
         end
     end
+
     if plate then
-        TriggerServerEvent('rsl_garage:storeVehicle', data.id, plate)
+        TriggerServerEvent('rsl_garage:storeVehicle', currentGarageId, plate)
+    else
+        exports['rsl_core']:ShowNotification({ title = 'You need to be driving the vehicle to store it here.', type = 'error' })
     end
     cb('ok')
 end)

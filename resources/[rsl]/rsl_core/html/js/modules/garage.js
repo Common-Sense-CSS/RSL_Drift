@@ -28,11 +28,13 @@
                     <div class="rsl-vehicle-card__model">${vehicle.model}</div>
                     <div class="rsl-vehicle-card__status ${stored ? '' : 'rsl-vehicle-card__status--out'}">${stored ? 'Stored' : 'Out'} · ${vehicle.plate}</div>
                 </div>
-                <button class="rsl-btn" data-action="${stored ? 'spawn' : 'store'}">${stored ? 'Take Out' : 'Store'}</button>
+                ${stored ? '<button class="rsl-btn" data-action="spawn">Take Out</button>' : ''}
             `;
-            card.querySelector('button').addEventListener('click', () => {
-                RSL.post(`garage:${stored ? 'spawn' : 'store'}`, { id: vehicle.id });
-            });
+            if (stored) {
+                card.querySelector('button').addEventListener('click', () => {
+                    RSL.post('garage:spawn', { id: vehicle.id });
+                });
+            }
             list.appendChild(card);
         }
     }
@@ -76,6 +78,8 @@
     });
 
     renameCancel.addEventListener('click', closeRename);
+
+    document.getElementById('rsl-garage-store-current').addEventListener('click', () => RSL.post('garage:store'));
 
     document.getElementById('rsl-garage-close').addEventListener('click', () => RSL.post('garage:close'));
 
