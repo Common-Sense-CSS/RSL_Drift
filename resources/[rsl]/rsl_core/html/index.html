@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/hud.css" />
     <link rel="stylesheet" href="css/garage.css" />
     <link rel="stylesheet" href="css/dealership.css" />
+    <link rel="stylesheet" href="css/inventory.css" />
     <link rel="stylesheet" href="css/character-select.css" />
     <link rel="stylesheet" href="css/character-creator.css" />
 </head>
@@ -69,6 +70,30 @@
         </div>
     </div>
 
+    <div id="rsl-inventory">
+        <div class="rsl-modal rsl-modal--wide rsl-panel">
+            <div class="rsl-modal__header">
+                <div class="rsl-modal__title-group">
+                    <div class="rsl-modal__title">Inventory</div>
+                    <div class="rsl-inventory__weight" id="rsl-inventory-weight">0.0 / 0.0 kg</div>
+                </div>
+                <button class="rsl-btn rsl-btn--ghost" id="rsl-inventory-close">Close</button>
+            </div>
+            <div class="rsl-inventory__body">
+                <div class="rsl-inventory__grid" id="rsl-inventory-grid"></div>
+                <div class="rsl-inventory__detail" id="rsl-inventory-detail" hidden>
+                    <div class="rsl-inventory__detail-label" id="rsl-inventory-detail-label"></div>
+                    <div class="rsl-inventory__detail-desc" id="rsl-inventory-detail-desc"></div>
+                    <div class="rsl-inventory__detail-meta" id="rsl-inventory-detail-meta"></div>
+                    <div class="rsl-inventory__detail-actions">
+                        <button class="rsl-btn" id="rsl-inventory-detail-use">Use</button>
+                        <button class="rsl-btn rsl-btn--ghost" id="rsl-inventory-detail-drop">Drop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="rsl-character-select">
         <div class="rcs-title">RSL DRIFT</div>
         <div class="rcs-slots" id="rsl-character-select-slots"></div>
@@ -120,6 +145,7 @@
     <script src="js/modules/hud.js"></script>
     <script src="js/modules/garage.js"></script>
     <script src="js/modules/dealership.js"></script>
+    <script src="js/modules/inventory.js"></script>
     <script src="js/modules/character-select.js"></script>
     <script src="js/modules/character-creator.js"></script>
 </body>

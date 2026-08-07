@@ -1,0 +1,151 @@
+#rsl-inventory {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 3, 10, 0.55);
+    z-index: 50;
+}
+
+#rsl-inventory.rsl-modal--visible {
+    display: flex;
+}
+
+#rsl-inventory .rsl-modal {
+    width: 760px;
+    max-height: 80vh;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#rsl-inventory .rsl-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#rsl-inventory .rsl-modal__title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#rsl-inventory .rsl-modal__title {
+    font-family: var(--rsl-font-display);
+    font-size: 18px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+#rsl-inventory .rsl-inventory__weight {
+    font-family: var(--rsl-font-display);
+    font-size: 12px;
+    color: var(--rsl-text-2);
+    padding: 3px 8px;
+    background: var(--rsl-bg-2);
+    border: 1px solid var(--rsl-border);
+    border-radius: var(--rsl-radius-sm);
+}
+
+#rsl-inventory .rsl-inventory__body {
+    display: flex;
+    gap: 16px;
+    overflow: hidden;
+}
+
+#rsl-inventory .rsl-inventory__grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 4px;
+    align-content: start;
+}
+
+#rsl-inventory .rsl-inventory__cell {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: var(--rsl-bg-2);
+    border: 1px solid var(--rsl-border);
+    border-radius: var(--rsl-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    cursor: default;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+#rsl-inventory .rsl-inventory__cell--filled {
+    cursor: grab;
+    border-color: var(--rsl-border-strong);
+}
+
+#rsl-inventory .rsl-inventory__cell--selected {
+    border-color: var(--rsl-accent-400);
+    box-shadow: 0 0 0 1px var(--rsl-accent-400);
+}
+
+#rsl-inventory .rsl-inventory__cell--dragover {
+    background: var(--rsl-accent-glow);
+}
+
+#rsl-inventory .rsl-inventory__cell-label {
+    font-size: 10px;
+    line-height: 1.2;
+    text-align: center;
+    color: var(--rsl-text-0);
+    word-break: break-word;
+}
+
+#rsl-inventory .rsl-inventory__cell-qty {
+    position: absolute;
+    bottom: 3px;
+    right: 5px;
+    font-family: var(--rsl-font-display);
+    font-size: 10px;
+    color: var(--rsl-accent-400);
+}
+
+#rsl-inventory .rsl-inventory__detail {
+    width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: var(--rsl-bg-2);
+    border: 1px solid var(--rsl-border);
+    border-radius: var(--rsl-radius-md);
+}
+
+#rsl-inventory .rsl-inventory__detail-label {
+    font-weight: 600;
+    color: var(--rsl-text-0);
+}
+
+#rsl-inventory .rsl-inventory__detail-desc {
+    font-size: 12px;
+    color: var(--rsl-text-1);
+}
+
+#rsl-inventory .rsl-inventory__detail-meta {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rsl-text-2);
+}
+
+#rsl-inventory .rsl-inventory__detail-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+#rsl-inventory .rsl-inventory__detail-actions .rsl-btn {
+    flex: 1;
+}

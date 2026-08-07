@@ -66,4 +66,17 @@ CREATE TABLE IF NOT EXISTS `rsl_drift_scores` (
     CONSTRAINT `fk_score_character` FOREIGN KEY (`character_id`) REFERENCES `rsl_characters` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- rsl_inventory_items lands in Sub-phase B (inventory system).
+CREATE TABLE IF NOT EXISTS `rsl_inventory_items` (
+    `id`                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `owner_character_id` CHAR(36) NOT NULL,
+    `slot`               INT UNSIGNED NOT NULL,
+    `item_key`           VARCHAR(64) NOT NULL,
+    `quantity`           INT UNSIGNED NOT NULL DEFAULT 1,
+    `metadata`           LONGTEXT NOT NULL DEFAULT ('{}'),
+    `created_at`         DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at`         DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_owner_slot` (`owner_character_id`, `slot`),
+    KEY `idx_owner` (`owner_character_id`),
+    CONSTRAINT `fk_inventory_owner` FOREIGN KEY (`owner_character_id`) REFERENCES `rsl_characters` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

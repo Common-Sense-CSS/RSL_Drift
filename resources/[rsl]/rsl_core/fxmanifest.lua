@@ -17,6 +17,7 @@ shared_scripts {
     'data/rsl_vehicles.lua',
     'data/rsl_garages.lua',
     'data/rsl_dealerships.lua',
+    'data/rsl_items.lua',
     'modules/core/game_state_sh.lua',
     'modules/player/progression_sh.lua',
 }
@@ -28,6 +29,7 @@ client_scripts {
     'modules/hud/hud_c.lua',
     'modules/garage/garage_c.lua',
     'modules/dealership/dealership_c.lua',
+    'modules/inventory/inventory_c.lua',
     'modules/admin/admin_c.lua',
     'modules/character/appearance_c.lua',
     'modules/character/appearance_sync_c.lua',
@@ -42,6 +44,7 @@ server_scripts {
     'modules/character/character_s.lua',
     'modules/garage/garage_s.lua',
     'modules/dealership/dealership_s.lua',
+    'modules/inventory/inventory_s.lua',
     'modules/admin/admin_s.lua',
 }
 

@@ -27,6 +27,20 @@ RegisterCommand('setlevel', function(source, args)
     reply(source, ok, ok and ('Set #%d to level %d'):format(targetId, level) or 'Invalid target or level')
 end, true)
 
+RegisterCommand('giveitem', function(source, args)
+    local targetId, itemKey, qty = tonumber(args[1]), args[2], tonumber(args[3])
+    if not targetId or not itemKey or not qty then
+        reply(source, false, 'Usage: /giveitem [id] [item] [qty]')
+        return
+    end
+    if not RSLItems[itemKey] then
+        reply(source, false, ('Unknown item "%s"'):format(itemKey))
+        return
+    end
+    local ok = exports['rsl_core']:AddItem(targetId, itemKey, qty)
+    reply(source, ok, ok and ('Gave %dx %s to #%d'):format(qty, itemKey, targetId) or 'Invalid target, or it would exceed weight/slot capacity')
+end, true)
+
 RegisterCommand('car', function(source, args)
     local model = args[1]
     if not model then

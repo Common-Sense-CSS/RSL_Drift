@@ -10,10 +10,10 @@ through the exports below — never through direct database access.
 local cash = exports['rsl_core']:GetPlayerCash(source)
 ```
 
-This file covers **Phase 1-2 + the character system** (framework skeleton,
-garage/dealership, admin commands, multi-character accounts). Inventory and
-the status/needs HUD land next; drift scoring/leaderboard exports land as
-later phases ship.
+This file covers **Phase 1-2 + the character system + inventory** (framework
+skeleton, garage/dealership, admin commands, multi-character accounts,
+general-purpose inventory). The status/needs HUD lands next; drift scoring/
+leaderboard exports land as later phases ship.
 
 **Accounts vs. characters:** a license identifier can hold up to
 `RSLConfig.CHARACTER_SLOTS` (3) characters. Nothing is "the active player"
@@ -138,6 +138,33 @@ Garage locations are defined in `data/rsl_garages.lua` (`RSLGarages`, shared) �
 
 At the dealership, every purchase requires the player to pick a real garage — there's no default. Purchases carry a `mode`: `'drive'` still spawns the car immediately at the dealership's `spawnCoords`, but its `garage_id` is the chosen garage (so a later auto-swap — see `SpawnOwnedVehicle` above — has a real home to return it to instead of a fixed default); `'garage'` sends it (stored) straight to the chosen garage. Either way it's rejected before any cash is taken if that garage is already at capacity.
 
+### Inventory
+
+General-purpose — not tied to food/drink. Item definitions (label,
+description, weight, `maxStack`, `usable`, `consumeEffects`) live in the
+shared `data/rsl_items.lua` (`RSLItems`), not the database; inventory rows
+only store `item_key` + quantity + metadata. `metadata`-bearing items never
+auto-stack (for later phases — unique drops, tuned parts, etc.); everything
+else does, up to the item's `maxStack`.
+
+| Export | Params | Returns | Description |
+|--------|--------|---------|-------------|
+| `GetInventory(source)` | server id | `table[], number` | The player's rows (`{ id, slot, item_key, quantity, metadata }`) and total carried weight. |
+| `AddItem(source, itemKey, qty, metadata?)` | server id, item key, qty, `table?` | `boolean` | Adds items, auto-stacking into existing compatible slots first. `false` if it would exceed `RSLConfig.INVENTORY_MAX_WEIGHT` or there's no free slot — nothing is applied on failure. |
+| `RemoveItem(source, itemKey, qty)` | server id, item key, qty | `boolean` | Removes across stacks oldest-slot-first. `false` (nothing removed) if the player doesn't own enough total. |
+| `HasItem(source, itemKey, qty?)` | server id, item key, qty (default 1) | `boolean` | Whether the player owns at least `qty` total across all stacks. |
+| `UseItem(source, slot)` | server id, slot number | `boolean` | Consumes one unit of whatever `usable` item is in that slot. Does **not** yet apply `consumeEffects` (hunger/thirst) — the needs system that reads those doesn't exist yet; this just removes the item and notifies. |
+
+```lua
+exports['rsl_core']:AddItem(source, 'water_bottle', 3)
+if exports['rsl_core']:HasItem(source, 'water_bottle', 1) then
+    exports['rsl_core']:RemoveItem(source, 'water_bottle', 1)
+end
+```
+
+Config: `RSLConfig.INVENTORY_SLOTS` (40) and `RSLConfig.INVENTORY_MAX_WEIGHT`
+(30.0, sum of item weights).
+
 ### Characters
 
 | Export | Params | Returns | Description |
@@ -145,7 +172,7 @@ At the dealership, every purchase requires the player to pick a real garage — 
 | `GetCharacterSlots(source)` | server id | `table[]` | The account's `RSLConfig.CHARACTER_SLOTS` slots: `{ slotIndex, occupied, id?, name?, model?, level? }`. |
 | `SelectCharacter(source, characterId)` | server id, character id | `table?` | Activates an owned character, returns its full row (including decoded `appearance`/`data`), or `nil` if not owned. |
 | `CreateCharacter(source, slotIndex, name, model, appearance)` | server id, slot 1-N, name, `'mp_m_freemode_01'`\|`'mp_f_freemode_01'`, appearance table | `table?` | Creates + activates a character in an empty slot. `appearance` is run through `RSLCharacterOptions.SanitizeAppearance` server-side — never trust it as-is. `nil` if the slot is taken or inputs are invalid. |
-| `DeleteCharacter(source, characterId)` | server id, character id | `boolean` | Deletes an owned character. Cascades to their vehicles and (later) drift scores/inventory. |
+| `DeleteCharacter(source, characterId)` | server id, character id | `boolean` | Deletes an owned character. Cascades to their vehicles, inventory, and (later) drift scores. |
 | `GetActiveCharacterId(source)` | server id | `string?` | The active character's id, for add-ons that need to key their own tables off it (as `rsl_vehicles` does). |
 
 Shared (`data/rsl_character_options.lua`): `RSLCharacterOptions.DefaultAppearance(model)` and `RSLCharacterOptions.SanitizeAppearance(raw, model)` define and clamp the appearance table shape (head blend, 20 face features, hair, overlays, clothing) — reuse these rather than hand-rolling appearance validation.
@@ -171,6 +198,7 @@ Registered restricted (require the `command.<name>` ACE permission — see the c
 | Command | Usage | Description |
 |---------|-------|-------------|
 | `/givecash` | `/givecash [id] [amount]` | Add cash to a player. |
+| `/giveitem` | `/giveitem [id] [item] [qty]` | Add an item to a player's inventory (`item` is a key from `RSLItems`). |
 | `/setlevel` | `/setlevel [id] [level]` | Set a player's level directly. |
 | `/car` | `/car [model]` | Spawn a vehicle in front of yourself (any model, not tied to ownership). |
 | `/tp` | `/tp [x] [y] [z]` | Teleport yourself to coordinates. |
